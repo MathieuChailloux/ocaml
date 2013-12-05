@@ -133,9 +133,9 @@ let yyparse tables start lexer lexbuf =
         env.symb_end <- lexbuf.lex_curr_p;
         loop Token_read t
     | Raise_parse_error ->
-        raise Parse_error
+	print_endline "raise_parse_error";raise Parse_error
     | Compute_semantic_action ->
-        let (action, value) =
+      let (action, value) =
           try
             (Semantic_action_computed, tables.actions.(env.rule_number) env)
           with Parse_error ->

@@ -208,6 +208,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
             if (caml_parser_trace){
               fprintf(stderr, "No more states to discard\n");
             }
+	    fprintf (stderr,"sp <= stackbase\n"); /* ocaml-with modifs */
             return RAISE_PARSE_ERROR; /* The ML code raises Parse_error */
           }
           sp--;
@@ -215,7 +216,8 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
       }
     } else {
       if (Int_val(env->curr_char) == 0)
-        return RAISE_PARSE_ERROR; /* The ML code raises Parse_error */
+	{ fprintf(stderr, "env->curr_char == 0\n"); /* ocaml-with modifs */
+	  return RAISE_PARSE_ERROR;} /* The ML code raises Parse_error */
       if (caml_parser_trace) fprintf(stderr, "Discarding last token read\n");
       env->curr_char = Val_int(-1);
       goto loop;
@@ -285,6 +287,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
 
   default:                      /* Should not happen */
     Assert(0);
+    fprintf (stderr, "default case in parsing.c\n"); /* ocaml-with modifs */
     return RAISE_PARSE_ERROR;   /* Keeps gcc -Wall happy */
   }
 

@@ -35,7 +35,7 @@ and argument =  (* Read a raw argument *)
   | eof
       { EOL }
   | _
-      { raise Parsing.Parse_error }
+      { print_endline "dbg1"; raise Parsing.Parse_error }
 
 and line_argument =
   parse
@@ -92,4 +92,4 @@ and lexeme =    (* Read a lexeme *)
   | eof
       { EOL }
   | _
-      { raise Parsing.Parse_error }
+      { print_endline "dbg2"; raise Parsing.Parse_error }

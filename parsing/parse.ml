@@ -47,11 +47,18 @@ let wrap parsing_fun lexbuf =
     when !Location.input_name = "//toplevel//" ->
       maybe_skip_phrase lexbuf;
       raise err
-  | Parsing.Parse_error | Syntaxerr.Escape_error ->
-      let loc = Location.curr lexbuf in
-      if !Location.input_name = "//toplevel//"
-      then maybe_skip_phrase lexbuf;
-      raise(Syntaxerr.Error(Syntaxerr.Other loc))
+  | Parsing.Parse_error ->
+    print_endline "Parsing.Parse_error";
+    let loc = Location.curr lexbuf in
+    if !Location.input_name = "//toplevel//"
+    then maybe_skip_phrase lexbuf;
+    raise(Syntaxerr.Error(Syntaxerr.Other loc))
+  | Syntaxerr.Escape_error ->
+    print_endline "Syntaxerr.Escape_error";
+    let loc = Location.curr lexbuf in
+    if !Location.input_name = "//toplevel//"
+    then maybe_skip_phrase lexbuf;
+    raise(Syntaxerr.Error(Syntaxerr.Other loc))
 
 let implementation = wrap Parser.implementation
 and interface = wrap Parser.interface

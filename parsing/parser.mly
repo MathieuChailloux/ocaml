@@ -1270,9 +1270,9 @@ match_cases:
 ;
 match_case:
   | pattern with_patt_clause MINUSGREATER seq_expr
-      { print_endline "c'est cool";Exp.case $1 ~idecl:$2 $4}
+      { print_endline "bijour";Exp.case $1 ~idecl:$2 $4}
   | pattern with_patt_clause WHEN seq_expr MINUSGREATER seq_expr
-      { Exp.case $1 ~idecl:$2 ~guard:$4 $6}
+      { print_endline "shalom"; Exp.case $1 ~idecl:$2 ~guard:$4 $6}
   | pattern MINUSGREATER seq_expr
       { Exp.case $1 $3 }
   | pattern WHEN seq_expr MINUSGREATER seq_expr
@@ -1631,7 +1631,7 @@ simple_core_type:
     simple_core_type2  %prec below_SHARP
       { $1 }
   | LPAREN core_type_comma_list RPAREN %prec below_SHARP
-      { match $2 with [sty] -> sty | _ -> raise Parse_error }
+      { match $2 with [sty] -> sty | _ -> print_endline "simple_core_type"; raise Parse_error }
   | simple_core_type attribute
       { Typ.attr $1 $2 }
 ;
@@ -1640,7 +1640,7 @@ simple_core_type_no_attr:
     simple_core_type2  %prec below_SHARP
       { $1 }
   | LPAREN core_type_comma_list RPAREN %prec below_SHARP
-      { match $2 with [sty] -> sty | _ -> raise Parse_error }
+      { match $2 with [sty] -> sty | _ -> print_endline "sct_no_attr"; raise Parse_error }
 ;
 
 simple_core_type2:
