@@ -1048,8 +1048,8 @@ expr:
       { mkexp_attrs (Pexp_ifthenelse($3, $5, None)) $2 }
   | WHILE ext_attributes seq_expr DO seq_expr DONE
       { mkexp_attrs (Pexp_while($3, $5)) $2 }
-  | FOR ext_attributes pattern EQUAL seq_expr direction_flag seq_expr DO seq_expr DONE
-      { mkexp_attrs(Pexp_for($3, $5, $7, $6, $9)) $2 }
+  | FOR ext_attributes val_ident EQUAL seq_expr direction_flag seq_expr DO seq_expr DONE
+      { mkexp_attrs(Pexp_for(mkrhs $3 3, $5, $7, $6, $9)) $2 }
   | expr COLONCOLON expr
       { mkexp_cons (rhs_loc 2) (ghexp(Pexp_tuple[$1;$3])) (symbol_rloc()) }
   | LPAREN COLONCOLON RPAREN LPAREN expr COMMA expr RPAREN
@@ -1268,11 +1268,24 @@ match_cases:
   | match_cases BAR match_case { $3 :: $1 }
 ;
 match_case:
-    pattern MINUSGREATER seq_expr
+  | pattern with_patt_clause MINUSGREATER seq_expr
+      { Exp.case $1 ~idecl:$2 $4}
+  | pattern with_patt_clause WHEN seq_expr MINUSGREATER seq_expr
+      { Exp.case $1 ~idecl:$2 ~guard:$4 $6}
+  | pattern MINUSGREATER seq_expr
       { Exp.case $1 $3 }
   | pattern WHEN seq_expr MINUSGREATER seq_expr
       { Exp.case $1 ~guard:$3 $5 }
 ;
+
+/* To check : les positions */
+with_patt_clause:
+  | WITH LIDENT EQUAL seq_expr AND with_patt_clause
+      { (mkpatvar $2 2, $4)::$6 }
+  | WITH LIDENT EQUAL seq_expr
+      { [mkpatvar $2 2, $4] }
+      
+
 fun_def:
     MINUSGREATER seq_expr                       { $2 }
 /* Cf #5939: we used to accept (fun p when e0 -> e) */

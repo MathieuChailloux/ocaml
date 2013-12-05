@@ -64,7 +64,6 @@ type error =
   | Unexpected_existential
   | Unqualified_gadt_pattern of Path.t * string
   | Invalid_interval
-  | Invalid_for_loop_index
   | Extension of string
 
 exception Error of Location.t * Env.t * error
@@ -113,7 +112,7 @@ let fst3 (x, _, _) = x
 let snd3 (_,x,_) = x
 
 let case lhs rhs =
-  {c_lhs = lhs; c_guard = None; c_rhs = rhs}
+  {c_lhs = lhs; c_idecl=None; c_guard = None; c_rhs = rhs}
 
 (* Upper approximation of free identifiers on the parse tree *)
 
@@ -158,7 +157,10 @@ let iter_expression f e =
     | Pexp_object { pcstr_fields = fs } -> List.iter class_field fs
     | Pexp_pack me -> module_expr me
 
-  and case {pc_lhs = _; pc_guard; pc_rhs} =
+  and case {pc_lhs = _; pc_idecl; pc_guard; pc_rhs} =
+    (match pc_idecl with 
+      | None -> ()
+      | Some l -> List.iter (fun (_,y) -> expr y) l);
     may expr pc_guard;
     expr pc_rhs
 
@@ -229,6 +231,12 @@ let all_idents_cases el =
   in
   List.iter
     (fun cp ->
+       (* modif *)
+       (match cp.pc_idecl with 
+	 | None -> ()
+	 | Some decls ->
+	     List.iter (fun (_, y) -> iter_expression f y) decls
+       );
       may (iter_expression f) cp.pc_guard;
       iter_expression f cp.pc_rhs
     )
@@ -2025,7 +2033,7 @@ and type_expect_ ?in_function env sexp ty_expected =
         (* TODO: keep attributes, call type_function directly *)
   | Pexp_fun (l, None, spat, sexp) ->
       type_function ?in_function loc sexp.pexp_attributes env ty_expected
-        l [{pc_lhs=spat; pc_guard=None; pc_rhs=sexp}]
+        l [{pc_lhs=spat; pc_guard=None; pc_idecl=None; pc_rhs=sexp}]
   | Pexp_function caselist ->
       type_function ?in_function
         loc sexp.pexp_attributes env ty_expected "" caselist
@@ -2318,16 +2326,11 @@ and type_expect_ ?in_function env sexp ty_expected =
   | Pexp_for(param, slow, shigh, dir, sbody) ->
       let low = type_expect env slow Predef.type_int in
       let high = type_expect env shigh Predef.type_int in
-      let id, new_env =
-        match param.ppat_desc with
-        | Ppat_any -> Ident.create "_for", env
-        | Ppat_var {txt} ->
-            Env.enter_value txt {val_type = instance_def Predef.type_int;
-                                 val_attributes = [];
-                                 val_kind = Val_reg; Types.val_loc = loc; } env
-              ~check:(fun s -> Warnings.Unused_for_index s)
-        | _ ->
-            raise (Error (param.ppat_loc, env, Invalid_for_loop_index))
+      let (id, new_env) =
+        Env.enter_value param.txt {val_type = instance_def Predef.type_int;
+          val_attributes = [];
+          val_kind = Val_reg; Types.val_loc = loc; } env
+          ~check:(fun s -> Warnings.Unused_for_index s)
       in
       let body = type_statement new_env sbody in
       rue {
@@ -3311,13 +3314,15 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
 (*  Format.printf "@[%i %i@ %a@]@." lev (get_current_level())
     Printtyp.raw_type_expr ty_arg; *)
   let pat_env_list =
+    (* MODIFS !! *)
     List.map
-      (fun {pc_lhs; pc_guard; pc_rhs} ->
+      (fun {pc_lhs; pc_idecl; pc_guard; pc_rhs} ->
         let loc =
           let open Location in
-          match pc_guard with
-          | None -> pc_rhs.pexp_loc
-          | Some g -> {pc_rhs.pexp_loc with loc_start=g.pexp_loc.loc_start}
+            match pc_guard with
+              | None -> pc_rhs.pexp_loc
+		  (* A voir plus tard *)
+              | Some g -> {pc_rhs.pexp_loc with loc_start=g.pexp_loc.loc_start}
         in
         if !Clflags.principal then begin_def (); (* propagation of pattern *)
         let scope = Some (Annot.Idef loc) in
@@ -3380,11 +3385,13 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
                    Predef.type_bool)
         in
         let exp = type_expect ?in_function ext_env sexp ty_res' in
-        {
-         c_lhs = pat;
-         c_guard = guard;
-         c_rhs = {exp with exp_type = instance env ty_res'}
-        }
+          {
+            c_lhs = pat;
+	    (* Faire qqchose ! *)
+	    c_idecl=None;
+            c_guard = guard;
+            c_rhs = {exp with exp_type = instance env ty_res'}
+          }
       )
       pat_env_list caselist
   in
@@ -3826,8 +3833,6 @@ let report_error env ppf = function
         "must be qualified in this pattern"
   | Invalid_interval ->
       fprintf ppf "@[Only character intervals are supported in patterns.@]"
-  | Invalid_for_loop_index ->
-      fprintf ppf "@[Invalid for-loop index: only variables and _ are allowed.@]"
   | Extension s ->
       fprintf ppf "Uninterpreted extension '%s'." s
 

@@ -100,7 +100,7 @@ module Exp:
     val ifthenelse: ?loc:loc -> ?attrs:attrs -> expression -> expression -> expression option -> expression
     val sequence: ?loc:loc -> ?attrs:attrs -> expression -> expression -> expression
     val while_: ?loc:loc -> ?attrs:attrs -> expression -> expression -> expression
-    val for_: ?loc:loc -> ?attrs:attrs -> pattern -> expression -> expression -> direction_flag -> expression -> expression
+    val for_: ?loc:loc -> ?attrs:attrs -> str -> expression -> expression -> direction_flag -> expression -> expression
     val coerce: ?loc:loc -> ?attrs:attrs -> expression -> core_type option -> core_type -> expression
     val constraint_: ?loc:loc -> ?attrs:attrs -> expression -> core_type -> expression
     val send: ?loc:loc -> ?attrs:attrs -> expression -> string -> expression
@@ -117,7 +117,8 @@ module Exp:
     val open_: ?loc:loc -> ?attrs:attrs -> override_flag -> lid -> expression -> expression
     val extension: ?loc:loc -> ?attrs:attrs -> extension -> expression
 
-    val case: pattern -> ?guard:expression -> expression -> case
+    (* modif *)
+    val case: pattern -> ?guard:expression -> ?idecl:(pattern * expression) list -> expression -> case
   end
 
 (** Value declarations *)

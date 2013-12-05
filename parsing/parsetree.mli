@@ -244,7 +244,7 @@ and expression_desc =
   | Pexp_while of expression * expression
         (* while E1 do E2 done *)
   | Pexp_for of
-      pattern *  expression * expression * direction_flag * expression
+      string loc *  expression * expression * direction_flag * expression
         (* for i = E1 to E2 do E3 done      (flag = Upto)
            for i = E1 downto E2 do E3 done  (flag = Downto)
          *)
@@ -291,6 +291,7 @@ and expression_desc =
 and case =   (* (P -> E) or (P when E0 -> E) *)
     {
      pc_lhs: pattern;
+     pc_idecl : (pattern * expression) list option;
      pc_guard: expression option;
      pc_rhs: expression;
     }

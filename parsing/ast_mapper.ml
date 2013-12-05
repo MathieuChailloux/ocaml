@@ -292,8 +292,8 @@ module E = struct
     | Pexp_sequence (e1, e2) ->
         sequence ~loc ~attrs (sub.expr sub e1) (sub.expr sub e2)
     | Pexp_while (e1, e2) -> while_ ~loc ~attrs (sub.expr sub e1) (sub.expr sub e2)
-    | Pexp_for (p, e1, e2, d, e3) ->
-        for_ ~loc ~attrs (sub.pat sub p) (sub.expr sub e1) (sub.expr sub e2) d
+    | Pexp_for (id, e1, e2, d, e3) ->
+        for_ ~loc ~attrs (map_loc sub id) (sub.expr sub e1) (sub.expr sub e2) d
           (sub.expr sub e3)
     | Pexp_coerce (e, t1, t2) ->
         coerce ~loc ~attrs (sub.expr sub e) (map_opt (sub.typ sub) t1)
@@ -506,10 +506,14 @@ let default_mapper =
 
     cases = (fun this l -> List.map (this.case this) l);
     case =
-      (fun this {pc_lhs; pc_guard; pc_rhs} ->
+      (fun this {pc_lhs; pc_guard; pc_idecl; pc_rhs} ->
          {
            pc_lhs = this.pat this pc_lhs;
            pc_guard = map_opt (this.expr this) pc_guard;
+	   (* modif pas trop sûr *)
+	   pc_idecl = map_opt 
+	     (List.map (fun (pat, expr) -> (this.pat this) pat, (this.expr this) expr))
+	     pc_idecl;
            pc_rhs = this.expr this pc_rhs;
          }
       );

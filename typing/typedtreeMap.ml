@@ -91,11 +91,18 @@ module MakeMap(Map : MapArgument) = struct
   and map_bindings rec_flag list =
     List.map map_binding list
 
-  and map_case {c_lhs; c_guard; c_rhs} =
+  and map_case {c_lhs; c_idecl; c_guard; c_rhs} =
     {
-     c_lhs = map_pattern c_lhs;
-     c_guard = may_map map_expression c_guard;
-     c_rhs = map_expression c_rhs;
+      c_lhs = map_pattern c_lhs;
+      c_idecl = may_map 
+	(List.map 
+	   (fun (pat, exp) -> 
+	      map_pattern pat, map_expression exp
+	   )
+	)
+	c_idecl;
+      c_guard = may_map map_expression c_guard;
+      c_rhs = map_expression c_rhs;
     }
 
   and map_cases list =

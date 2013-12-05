@@ -92,7 +92,7 @@ and expression_desc =
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
   | Texp_for of
-      Ident.t * Parsetree.pattern * expression * expression * direction_flag *
+      Ident.t * string loc * expression * expression * direction_flag *
         expression
   | Texp_send of expression * meth * expression option
   | Texp_new of Path.t * Longident.t loc * Types.class_declaration
@@ -109,9 +109,11 @@ and meth =
     Tmeth_name of string
   | Tmeth_val of Ident.t
 
+(* modif *)
 and case =
     {
      c_lhs: pattern;
+      c_idecl: (pattern * expression) list option;
      c_guard: expression option;
      c_rhs: expression;
     }
