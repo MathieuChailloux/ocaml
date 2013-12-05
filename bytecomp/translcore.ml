@@ -506,16 +506,18 @@ let rec name_pattern default = function
 (* Push the default values under the functional abstractions *)
 
 let rec push_defaults loc bindings cases partial =
+  (* ocaml-with modifs *)
   match cases with
-    [{c_lhs=pat; c_guard=None;
+    [{c_lhs=pat; c_guard=None; c_idecl=idecl;
       c_rhs={exp_desc = Texp_function(l, pl,partial)} as exp}] ->
       let pl = push_defaults exp.exp_loc bindings pl partial in
-      [{c_lhs=pat; c_guard=None; c_rhs={exp with exp_desc = Texp_function(l, pl, partial)}}]
-  | [{c_lhs=pat; c_guard=None;
+      [{c_lhs=pat; c_guard=None; c_idecl=idecl; c_rhs={exp with exp_desc = Texp_function(l, pl, partial)}}]
+  | [{c_lhs=pat; c_guard=None; c_idecl=idecl;
       c_rhs={exp_attributes=[{txt="#default"},_];
              exp_desc = Texp_let
                (Nonrecursive, binds, ({exp_desc = Texp_function _} as e2))}}] ->
-      push_defaults loc (binds :: bindings) [{c_lhs=pat;c_guard=None;c_rhs=e2}] partial
+      push_defaults loc (binds :: bindings)
+	[{c_lhs=pat;c_guard=None;c_idecl=idecl;c_rhs=e2}] partial
   | [case] ->
       let exp =
         List.fold_left
@@ -524,7 +526,7 @@ let rec push_defaults loc bindings cases partial =
           case.c_rhs bindings
       in
       [{case with c_rhs=exp}]
-  | {c_lhs=pat; c_rhs=exp; c_guard=_} :: _ when bindings <> [] ->
+  | {c_lhs=pat; c_rhs=exp; c_guard=_; c_idecl=idecl} :: _ when bindings <> [] ->
       let param = name_pattern "param" cases in
       let name = Ident.name param in
       let exp =
@@ -539,7 +541,8 @@ let rec push_defaults loc bindings cases partial =
              cases, partial) }
       in
       push_defaults loc bindings
-        [{c_lhs={pat with pat_desc = Tpat_var (param, mknoloc name)}; c_guard=None; c_rhs=exp}] Total
+        [{c_lhs={pat with pat_desc = Tpat_var (param, mknoloc name)};
+	  c_guard=None; c_idecl=idecl; c_rhs=exp}] Total
   | _ ->
       cases
 

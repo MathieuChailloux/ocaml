@@ -152,6 +152,7 @@ let array_function str name =
   ghloc (Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name)))
 
 let syntax_error () =
+  print_endline "putain de syntax error";
   raise Syntaxerr.Escape_error
 
 let unclosed opening_name opening_num closing_name closing_num =
@@ -1269,7 +1270,7 @@ match_cases:
 ;
 match_case:
   | pattern with_patt_clause MINUSGREATER seq_expr
-      { Exp.case $1 ~idecl:$2 $4}
+      { print_endline "c'est cool";Exp.case $1 ~idecl:$2 $4}
   | pattern with_patt_clause WHEN seq_expr MINUSGREATER seq_expr
       { Exp.case $1 ~idecl:$2 ~guard:$4 $6}
   | pattern MINUSGREATER seq_expr
