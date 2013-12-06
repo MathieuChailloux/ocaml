@@ -139,6 +139,7 @@ let yyparse tables start lexer lexbuf =
           try
             (Semantic_action_computed, tables.actions.(env.rule_number) env)
           with Parse_error ->
+	    print_endline "yyparse1"; (* ocaml-with *)
             (Error_detected, Obj.repr ()) in
         loop action value
     | Grow_stacks_1 ->
@@ -146,8 +147,9 @@ let yyparse tables start lexer lexbuf =
     | Grow_stacks_2 ->
         grow_stacks(); loop Stacks_grown_2 (Obj.repr ())
     | Call_error_function ->
-        tables.error_function "syntax error";
-        loop Error_detected (Obj.repr ()) in
+      tables.error_function "syntax error";
+      print_endline "call_error_function";
+      loop Error_detected (Obj.repr ()) in
   let init_asp = env.asp
   and init_sp = env.sp
   and init_stackbase = env.stackbase

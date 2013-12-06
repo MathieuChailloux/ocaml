@@ -184,6 +184,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
     }
     if (errflag > 0) goto recover;
     SAVE;
+    fprint (stderr, "token_read\n"); /* ocaml-with */
     return CALL_ERROR_FUNCTION;
                                 /* The ML code calls the error function */
   case ERROR_DETECTED:
