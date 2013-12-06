@@ -68,7 +68,7 @@ struct parser_env {       /* Mirrors parser_env in ../stdlib/parsing.ml */
 #define Short(tbl,n) (((short *)(tbl))[n])
 #endif
 
-int caml_parser_trace = 0;
+int caml_parser_trace = 0; /* ocaml-with modifs */
 
 /* Input codes */
 /* Mirrors parser_input in ../stdlib/parsing.ml */
@@ -184,7 +184,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
     }
     if (errflag > 0) goto recover;
     SAVE;
-    fprint (stderr, "token_read\n"); /* ocaml-with */
+    fprintf (stderr, "token_read\n"); /* ocaml-with */
     return CALL_ERROR_FUNCTION;
                                 /* The ML code calls the error function */
   case ERROR_DETECTED:
@@ -209,7 +209,7 @@ CAMLprim value caml_parse_engine(struct parser_tables *tables,
             if (caml_parser_trace){
               fprintf(stderr, "No more states to discard\n");
             }
-	    fprintf (stderr,"sp <= stackbase\n"); /* ocaml-with modifs */
+	    fprintf (stderr,"sp=%d <= stackbase=%d\n",sp,Int_val(env->stackbase)); /* ocaml-with modifs */
             return RAISE_PARSE_ERROR; /* The ML code raises Parse_error */
           }
           sp--;
