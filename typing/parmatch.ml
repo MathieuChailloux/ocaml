@@ -234,8 +234,18 @@ let rec pretty_val ppf v =
       fprintf ppf "@[(%a@ as %a)@]" pretty_val v Ident.print x
   | Tpat_or (v,w,_)    ->
       fprintf ppf "@[(%a|@,%a)@]" pretty_or v pretty_or w
-	(* Modif *)
-  | Tpat_with (p, vbl) -> fatal_error "Parmatch.pretty_val"
+  (**** MODIF ****)
+  | Tpat_with (p, vbl) -> 
+    let rec pretty_bindings ppf = function 
+	| [] -> ()
+	| {vb_pat=pat; vb_expr=expr; _}::[] ->
+	  fprintf ppf "%a =@ <expr>" pretty_val pat
+	| {vb_pat=pat; vb_expr=expr; _}::t ->
+	  fprintf ppf "%a =@ <expr>@ and %a" 
+	    pretty_val pat
+	    pretty_bindings t
+    in 
+    fprintf ppf "@[%a@ with @ %a@]" pretty_val p pretty_bindings vbl
 
 and pretty_car ppf v = match v.pat_desc with
 | Tpat_construct (_,{cstr_tag=tag}, [_ ; _])
@@ -1826,7 +1836,12 @@ module Conv = struct
       | Tpat_lazy p ->
           let results = loop p in
           List.map (fun p -> mkpat (Ppat_lazy p)) results
-      | Tpat_with _ -> fatal_error "Parmatch.Conv.conv"
+      (**** MODIF ****)
+      | Tpat_with (p, _ (* bindings *)) -> 
+	let results = loop p in
+	(* Todo : convert Typedtree.bindings to Parsetree.bindings *)
+	List.map (fun p -> mkpat (Ppat_with (p, []))) results
+
     in
     let ps = loop typed in
     (ps, constrs, labels)

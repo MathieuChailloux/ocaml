@@ -36,27 +36,29 @@ l. 78 - 79
 #TYPING
 
 typing/typecore.ml:
-l.507
-	ajout du cas Tpat_with dans build_as_type
+l. 507
+   ajout du cas Tpat_with dans build_as_type
 l. 1821 - 1824
    match du pattern pour compil. (todo refléchir et modif)
 l. 1193 - 1194
    match du pattern pour compil. (todo refléchir et modif)
 
 typing/typedtree.ml
-l. ?
+l. 56 - 58
    ajout du cas Tpat_with dans le type pattern (dans le mli aussi)
    màj iter_pattern_desc et map_pattern_desc
 
 typing/printtyped.ml
-l. 246-249
+l. 246 - 249
    affichage pattern Tpat_with
 
 typing/parmatch.ml
-l.238
+l. 237 - 248
+   Pretty-printing du match
 l.410
 l.993
-l.1829
+l. 1829 - 1833
+   Conversion d'un typedtree vers parsetree (je sais pas pourquoi.)
 l.1940
 l.2031
    ajout du cas Tpat_with pour la compil (todo : le faire vraiment)

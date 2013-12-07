@@ -503,7 +503,7 @@ let rec build_as_type env p =
       end
   | Tpat_any | Tpat_var _ | Tpat_constant _
   | Tpat_array _ | Tpat_lazy _ -> p.pat_type
-    (* MODIF *)
+  (**** MODIF ****)
   | Tpat_with (p, _) -> build_as_type env p
 
 let build_or_pat env loc lid =
