@@ -174,6 +174,12 @@ and pattern_desc =
   | Ppat_extension of extension
         (* [%id] *)
 
+  (**** MODIF *****)
+  | Ppat_with of pattern * value_binding list
+      (* P with x = v [and y = v'] *)
+
+(* pc_idecl : (pattern * expression) list option; *)
+
 (* Value expressions *)
 
 and expression =
@@ -291,7 +297,6 @@ and expression_desc =
 and case =   (* (P -> E) or (P when E0 -> E) *)
     {
      pc_lhs: pattern;
-     pc_idecl : (pattern * expression) list option;
      pc_guard: expression option;
      pc_rhs: expression;
     }

@@ -15,7 +15,7 @@
 include config/Makefile
 include stdlib/StdlibModules
 
-CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot
+CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot -annot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib -I otherlibs/dynlink
 COMPFLAGS=-strict-sequence -w +33..39 -warn-error A $(INCLUDES)
 LINKFLAGS=
@@ -109,6 +109,8 @@ NATTOPOBJS=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) \
   toplevel/opttopmain.cmo toplevel/opttopstart.cmo
 
 PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
+
+my_all: world
 
 # For users who don't read the INSTALL file
 defaultentry:

@@ -350,6 +350,11 @@ module P = struct
     | Ppat_lazy p -> lazy_ ~loc ~attrs (sub.pat sub p)
     | Ppat_unpack s -> unpack ~loc ~attrs (map_loc sub s)
     | Ppat_extension x -> extension ~loc ~attrs (sub.extension sub x)
+      
+    (**** MODIF ****)
+    | Ppat_with (p, bindings) ->
+      with_ ~loc ~attrs (sub.pat sub p) (List.map (sub.value_binding sub) bindings)
+
 end
 
 module CE = struct
@@ -506,14 +511,10 @@ let default_mapper =
 
     cases = (fun this l -> List.map (this.case this) l);
     case =
-      (fun this {pc_lhs; pc_guard; pc_idecl; pc_rhs} ->
+      (fun this {pc_lhs; pc_guard; pc_rhs} ->
          {
            pc_lhs = this.pat this pc_lhs;
            pc_guard = map_opt (this.expr this) pc_guard;
-	   (* modif pas trop sûr *)
-	   pc_idecl = map_opt 
-	     (List.map (fun (pat, expr) -> (this.pat this) pat, (this.expr this) expr))
-	     pc_idecl;
            pc_rhs = this.expr this pc_rhs;
          }
       );

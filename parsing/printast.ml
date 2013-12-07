@@ -230,6 +230,11 @@ and pattern i ppf x =
       line i ppf "Ppat_extension \"%s\"\n" s.txt;
       payload i ppf arg
 
+  (**** MODIF ****)
+  | Ppat_with (p, bindings) ->
+    pattern i ppf p;
+    list i value_binding ppf bindings
+
 and expression i ppf x =
   line i ppf "expression %a\n" fmt_location x.pexp_loc;
   attributes i ppf x.pexp_attributes;

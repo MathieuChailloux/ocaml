@@ -1269,23 +1269,29 @@ match_cases:
   | match_cases BAR match_case { $3 :: $1 }
 ;
 match_case:
-  | pattern with_patt_clause MINUSGREATER seq_expr
-      { print_endline "bijour";Exp.case $1 ~idecl:$2 $4}
-  | pattern with_patt_clause WHEN seq_expr MINUSGREATER seq_expr
-      { print_endline "shalom"; Exp.case $1 ~idecl:$2 ~guard:$4 $6}
   | pattern MINUSGREATER seq_expr
       { Exp.case $1 $3 }
   | pattern WHEN seq_expr MINUSGREATER seq_expr
       { Exp.case $1 ~guard:$3 $5 }
 ;
 
-/* To check : les positions */
+/**** MODIF ****/
 with_patt_clause:
-  | WITH LIDENT EQUAL seq_expr AND with_patt_clause
-      { (mkpatvar $2 2, $4)::$6 }
-  | WITH LIDENT EQUAL seq_expr
-      { [mkpatvar $2 2, $4] }
-      
+  | WITH with_patt_bindings
+      { List.rev $2 }
+;
+
+with_patt_bindings:
+  | with_patt_bindings AND with_patt_binding
+      { $3 :: $1 } /* reversed list ! */
+  | with_patt_binding
+      { [$1] } 
+;
+
+with_patt_binding:
+  | LIDENT EQUAL seq_expr
+      { Vb.mk (mkpatvar $1 1) $3 }
+;
 
 fun_def:
     MINUSGREATER seq_expr                       { $2 }
@@ -1366,6 +1372,11 @@ pattern:
       { mkpat(Ppat_lazy $2) }
   | pattern attribute
       { Pat.attr $1 $2 }
+
+  /**** MODIF ****/
+  | pattern with_patt_clause
+      { print_endline "[debug] pattern_with_matched"; mkpat(Ppat_with ($1, $2)) }
+
 ;
 simple_pattern:
     val_ident %prec below_EQUAL

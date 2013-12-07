@@ -113,7 +113,6 @@ and meth =
 and case =
     {
      c_lhs: pattern;
-      c_idecl: (pattern * expression) list option;
      c_guard: expression option;
      c_rhs: expression;
     }

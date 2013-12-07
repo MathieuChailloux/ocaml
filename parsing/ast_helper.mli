@@ -74,6 +74,9 @@ module Pat:
     val lazy_: ?loc:loc -> ?attrs:attrs -> pattern -> pattern
     val unpack: ?loc:loc -> ?attrs:attrs -> str -> pattern
     val extension: ?loc:loc -> ?attrs:attrs -> extension -> pattern
+    
+    (**** MODIF ****)
+    val with_: ?loc:loc -> ?attrs:attrs -> pattern -> value_binding list -> pattern
   end
 
 (** Expressions *)
@@ -117,8 +120,7 @@ module Exp:
     val open_: ?loc:loc -> ?attrs:attrs -> override_flag -> lid -> expression -> expression
     val extension: ?loc:loc -> ?attrs:attrs -> extension -> expression
 
-    (* modif *)
-    val case: pattern -> ?guard:expression -> ?idecl:(pattern * expression) list -> expression -> case
+    val case: pattern -> ?guard:expression -> expression -> case
   end
 
 (** Value declarations *)

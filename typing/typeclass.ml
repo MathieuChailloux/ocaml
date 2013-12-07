@@ -933,8 +933,6 @@ and class_expr cl_num val_env met_env scl =
       let partial =
         Parmatch.check_partial pat.pat_loc
           [{c_lhs=pat;
-	    (* modif - faire qqchose? *)
-	    c_idecl=None;
             c_guard=None;
             c_rhs = (* Dummy expression *)
             {exp_desc = Texp_constant (Asttypes.Const_int 1);

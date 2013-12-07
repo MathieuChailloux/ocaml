@@ -71,6 +71,9 @@ module Pat = struct
   let lazy_ ?loc ?attrs a = mk ?loc ?attrs (Ppat_lazy a)
   let unpack ?loc ?attrs a = mk ?loc ?attrs (Ppat_unpack a)
   let extension ?loc ?attrs a = mk ?loc ?attrs (Ppat_extension a)
+
+  (**** MODIF ****)
+  let with_ ?loc ?attrs a b = mk ?loc ?attrs (Ppat_with (a,b))
 end
 
 module Exp = struct
@@ -112,11 +115,10 @@ module Exp = struct
   let open_ ?loc ?attrs a b c = mk ?loc ?attrs (Pexp_open (a, b, c))
   let extension ?loc ?attrs a = mk ?loc ?attrs (Pexp_extension a)
 
-  let case lhs ?guard ?idecl rhs =
+  let case lhs ?guard rhs =
     {
      pc_lhs = lhs;
      pc_guard = guard;
-     pc_idecl = idecl;
      pc_rhs = rhs;
     }
 

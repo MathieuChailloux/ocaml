@@ -115,6 +115,11 @@ let rec is_irrefut_patt x =
   | Ppat_interval _
   | Ppat_constant _ | Ppat_construct _  | Ppat_variant _ | Ppat_array _
   | Ppat_type _-> false (*conservative*)
+  (**** MODIF ****)
+  | Ppat_with (p, bindings) -> 
+    is_irrefut_patt p 
+    && List.for_all (function {pvb_pat=p; _} -> is_irrefut_patt p) bindings
+
 class printer  ()= object(self:'self)
   val pipe = false
   val semi = false

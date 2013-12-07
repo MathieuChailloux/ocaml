@@ -112,7 +112,7 @@ let fst3 (x, _, _) = x
 let snd3 (_,x,_) = x
 
 let case lhs rhs =
-  {c_lhs = lhs; c_idecl=None; c_guard = None; c_rhs = rhs}
+  {c_lhs = lhs; c_guard = None; c_rhs = rhs}
 
 (* Upper approximation of free identifiers on the parse tree *)
 
@@ -157,10 +157,7 @@ let iter_expression f e =
     | Pexp_object { pcstr_fields = fs } -> List.iter class_field fs
     | Pexp_pack me -> module_expr me
 
-  and case {pc_lhs = _; pc_idecl; pc_guard; pc_rhs} =
-    (match pc_idecl with 
-      | None -> ()
-      | Some l -> List.iter (fun (_,y) -> expr y) l);
+  and case {pc_lhs = _; pc_guard; pc_rhs} =
     may expr pc_guard;
     expr pc_rhs
 
@@ -231,12 +228,6 @@ let all_idents_cases el =
   in
   List.iter
     (fun cp ->
-       (* modif *)
-       (match cp.pc_idecl with 
-	 | None -> ()
-	 | Some decls ->
-	     List.iter (fun (_, y) -> iter_expression f y) decls
-       );
       may (iter_expression f) cp.pc_guard;
       iter_expression f cp.pc_rhs
     )
@@ -1198,6 +1189,9 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
       { p with pat_extra = (Tpat_type (path, lid), loc, sp.ppat_attributes) :: p.pat_extra }
   | Ppat_extension (s, _arg) ->
       raise (Error (s.loc, !env, Extension s.txt))
+  
+  (**** MODIF ****)
+  | Ppat_with (p, _ (*bindings*)) -> type_pat p expected_ty
 
 let type_pat ?(allow_existentials=false) ?constrs ?labels
     ?(lev=get_current_level()) env sp expected_ty =
@@ -1827,6 +1821,11 @@ let iter_ppat f p =
   | Ppat_alias (p,_) | Ppat_constraint (p,_) | Ppat_lazy p -> f p
   | Ppat_record (args, flag) -> List.iter (fun (_,p) -> f p) args
 
+  (**** MODIF ****)
+  | Ppat_with (p, _ (*bindings*)) ->
+    print_endline "kikoo";
+    f p
+
 let contains_polymorphic_variant p =
   let rec loop p =
     match p.ppat_desc with
@@ -2033,7 +2032,7 @@ and type_expect_ ?in_function env sexp ty_expected =
         (* TODO: keep attributes, call type_function directly *)
   | Pexp_fun (l, None, spat, sexp) ->
       type_function ?in_function loc sexp.pexp_attributes env ty_expected
-        l [{pc_lhs=spat; pc_guard=None; pc_idecl=None; pc_rhs=sexp}]
+        l [{pc_lhs=spat; pc_guard=None; pc_rhs=sexp}]
   | Pexp_function caselist ->
       type_function ?in_function
         loc sexp.pexp_attributes env ty_expected "" caselist
@@ -3314,9 +3313,8 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
 (*  Format.printf "@[%i %i@ %a@]@." lev (get_current_level())
     Printtyp.raw_type_expr ty_arg; *)
   let pat_env_list =
-    (* MODIFS !! *)
     List.map
-      (fun {pc_lhs; pc_idecl; pc_guard; pc_rhs} ->
+      (fun {pc_lhs; pc_guard; pc_rhs} ->
         let loc =
           let open Location in
             match pc_guard with
@@ -3387,8 +3385,6 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
         let exp = type_expect ?in_function ext_env sexp ty_res' in
           {
             c_lhs = pat;
-	    (* Faire qqchose ! *)
-	    c_idecl=None;
             c_guard = guard;
             c_rhs = {exp with exp_type = instance env ty_res'}
           }
