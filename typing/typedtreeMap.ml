@@ -216,9 +216,9 @@ module MakeMap(Map : MapArgument) = struct
         | Tpat_constant _
         | Tpat_any
         | Tpat_var _ -> pat.pat_desc
-	  (* MODIF *)
+	(**** MODIF ****)
 	| Tpat_with (p, vbl) ->
-	  Tpat_with (map_pattern p, List.map (fun {vb_pat=pat;vb_expr=expr;vb_attributes} -> {vb_pat=map_pattern pat;vb_expr=map_expression expr;vb_attributes}) vbl)
+	  Tpat_with (map_pattern p, map_bindings Asttypes.Nonrecursive vbl)
     in
     let pat_extra = List.map map_pat_extra pat.pat_extra in
     Map.leave_pattern { pat with pat_desc = pat_desc; pat_extra = pat_extra }

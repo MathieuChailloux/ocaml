@@ -72,11 +72,11 @@ l. 2062
    Teste l'inactivité du pattern (si il est utile ou non)
 
 typing/typedtreeIter.ml
-l.219 - 220
+l. 219 - 220
    ajout cas Tpat_with pour iter_pattern
 
 typing/typedtreeMap.ml
-l.220 -221
+l. 220 -221
    ajout cas Tpat_with pour map_pattern
 
 #BYTECOMP
