@@ -38,10 +38,10 @@ l. 78 - 79
 typing/typecore.ml:
 l. 507
    ajout du cas Tpat_with dans build_as_type
-l. 1821 - 1824
+l. 1827 - 1829
    match du pattern pour compil. (todo refléchir et modif)
-l. 1193 - 1194
-   match du pattern pour compil. (todo refléchir et modif)
+l. 1195 - 1196
+   dans type_pat => transforme le parsetree en typedtree
 
 typing/typedtree.ml
 l. 56 - 58

@@ -1193,7 +1193,8 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
       raise (Error (s.loc, !env, Extension s.txt))
   
   (**** MODIF ****)
-  | Ppat_with (p, _ (*bindings*)) -> type_pat p expected_ty
+  | Ppat_with (p, _ (*bindings*)) ->
+    type_pat p expected_ty
 
 let type_pat ?(allow_existentials=false) ?constrs ?labels
     ?(lev=get_current_level()) env sp expected_ty =
