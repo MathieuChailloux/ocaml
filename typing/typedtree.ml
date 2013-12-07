@@ -53,6 +53,8 @@ and pattern_desc =
   | Tpat_array of pattern list
   | Tpat_or of pattern * pattern * row_desc option
   | Tpat_lazy of pattern
+      (* MODIF *)
+  | Tpat_with of pattern * value_binding list
 
 and expression =
   { exp_desc: expression_desc;
@@ -455,6 +457,8 @@ let iter_pattern_desc f = function
   | Tpat_any
   | Tpat_var _
   | Tpat_constant _ -> ()
+    (* MODIF *)
+  | Tpat_with (p, vbl) -> f p; List.iter (fun vb -> f vb.vb_pat) vbl 
 
 let map_pattern_desc f d =
   match d with
@@ -477,6 +481,10 @@ let map_pattern_desc f d =
   | Tpat_constant _
   | Tpat_any
   | Tpat_variant (_,None,_) -> d
+    (* MODIF *)
+  | Tpat_with (p, vbl) ->
+    Tpat_with (f p, List.map
+      (fun vb -> {vb with vb_pat = f vb.vb_pat}) vbl)
 
 (* List the identifiers bound by a pattern or a let *)
 

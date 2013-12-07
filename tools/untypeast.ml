@@ -188,6 +188,13 @@ and untype_pattern pat =
     | Tpat_array list -> Ppat_array (List.map untype_pattern list)
     | Tpat_or (p1, p2, _) -> Ppat_or (untype_pattern p1, untype_pattern p2)
     | Tpat_lazy p -> Ppat_lazy (untype_pattern p)
+      (* MODIF *)
+    | Tpat_with (p,vbl) -> Ppat_with (untype_pattern p, List.map
+      (fun {vb_pat=pat;vb_expr=expr;vb_attributes=attr} ->
+	{pvb_pat = untype_pattern pat;
+	 pvb_expr = untype_expression expr;
+	 pvb_attributes = attr}) vbl)
+				      
   in
   Pat.mk ~loc:pat.pat_loc ~attrs:pat.pat_attributes desc (* todo: fix attributes on extras *)
 

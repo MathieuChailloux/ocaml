@@ -215,6 +215,9 @@ module MakeIterator(Iter : IteratorArgument) : sig
         | Tpat_array list -> List.iter iter_pattern list
         | Tpat_or (p1, p2, _) -> iter_pattern p1; iter_pattern p2
         | Tpat_lazy p -> iter_pattern p
+	  (* MODIF *)
+	| Tpat_with (p, vbl) -> iter_pattern p;
+	  List.iter (fun {vb_pat;vb_expr;_} -> iter_pattern vb_pat; iter_expression vb_expr) vbl
       end;
       Iter.leave_pattern pat
 

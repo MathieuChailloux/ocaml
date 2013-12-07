@@ -516,6 +516,8 @@ let rec exc_inside p = match p.pat_desc with
   | Tpat_record (lps,_) ->
       List.exists (fun (_,_,p) -> exc_inside p) lps
   | Tpat_or (p1,p2,_) -> exc_inside p1 || exc_inside p2
+    (* MODIF *)
+  | Tpat_with (p,_) -> exc_inside p
 
 and exc_insides ps = List.exists exc_inside ps
 
@@ -670,6 +672,8 @@ let rec extract_vars r p = match p.pat_desc with
 | Tpat_lazy p -> extract_vars r p
 | Tpat_or (p,_,_) -> extract_vars r p
 | Tpat_constant _|Tpat_any|Tpat_variant (_,None,_) -> r
+  (* MODIF *)
+| Tpat_with _ -> fatal_error "Matching.extract_vars"
 
 exception Cannot_flatten
 
@@ -2646,6 +2650,8 @@ let find_in_pat pred =
         find_rec p || find_rec q
     | Tpat_constant _ | Tpat_var _
     | Tpat_any | Tpat_variant (_,None,_) -> false
+      (* MODIF *)
+    | Tpat_with _ -> fatal_error "Matching.find_in_pat"
   end in
   find_rec
 
@@ -2653,7 +2659,8 @@ let is_lazy_pat = function
   | Tpat_lazy _ -> true
   | Tpat_alias _ | Tpat_variant _ | Tpat_record _
   | Tpat_tuple _|Tpat_construct _ | Tpat_array _
-  | Tpat_or _ | Tpat_constant _ | Tpat_var _ | Tpat_any
+      (* MODIF *)
+  | Tpat_or _ | Tpat_constant _ | Tpat_var _ | Tpat_any | Tpat_with _
       -> false
 
 let is_lazy p = find_in_pat is_lazy_pat p
@@ -2668,7 +2675,8 @@ let have_mutable_field p = match p with
       lps
 | Tpat_alias _ | Tpat_variant _ | Tpat_lazy _
 | Tpat_tuple _|Tpat_construct _ | Tpat_array _
-| Tpat_or _
+    (* MODIF *)
+| Tpat_or _ | Tpat_with _
 | Tpat_constant _ | Tpat_var _ | Tpat_any
   -> false
 

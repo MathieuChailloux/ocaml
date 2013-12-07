@@ -234,6 +234,8 @@ let rec pretty_val ppf v =
       fprintf ppf "@[(%a@ as %a)@]" pretty_val v Ident.print x
   | Tpat_or (v,w,_)    ->
       fprintf ppf "@[(%a|@,%a)@]" pretty_or v pretty_or w
+	(* Modif *)
+  | Tpat_with (p, vbl) -> fatal_error "Parmatch.pretty_val"
 
 and pretty_car ppf v = match v.pat_desc with
 | Tpat_construct (_,{cstr_tag=tag}, [_ ; _])
@@ -405,6 +407,7 @@ let rec normalize_pat q = match q.pat_desc with
   | Tpat_lazy _ ->
       make_pat (Tpat_lazy omega) q.pat_type q.pat_env
   | Tpat_or _ -> fatal_error "Parmatch.normalize_pat"
+  | Tpat_with _ -> fatal_error "Parmatch.normalize_pat"
 
 (*
   Build normalized (cf. supra) discriminating pattern,
@@ -987,6 +990,7 @@ let rec has_instance p = match p.pat_desc with
   | Tpat_record (lps,_) -> has_instances (List.map (fun (_,_,x) -> x) lps)
   | Tpat_lazy p
     -> has_instance p
+  | Tpat_with _ -> fatal_error "Parmatch.has_instance"
 
 
 and has_instances = function
@@ -1822,6 +1826,7 @@ module Conv = struct
       | Tpat_lazy p ->
           let results = loop p in
           List.map (fun p -> mkpat (Ppat_lazy p)) results
+      | Tpat_with _ -> fatal_error "Parmatch.Conv.conv"
     in
     let ps = loop typed in
     (ps, constrs, labels)
@@ -1930,9 +1935,9 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
 | Tpat_variant (_, Some p, _) | Tpat_alias (p,_,_) -> collect_paths_from_pat r p
 | Tpat_or (p1,p2,_) ->
     collect_paths_from_pat (collect_paths_from_pat r p1) p2
-| Tpat_lazy p
-    ->
+| Tpat_lazy p ->
     collect_paths_from_pat r p
+| Tpat_with _ -> fatal_error "Parmatch.collect_paths_from_pat"
 
 
 (*
@@ -2023,6 +2028,7 @@ let rec inactive pat = match pat with
     List.exists (fun (_, _, p) -> inactive p.pat_desc) ldps
 | Tpat_or (p,q,_) ->
     inactive p.pat_desc && inactive q.pat_desc
+| Tpat_with _ -> fatal_error "Parmatch.inactive"
 
 (* A `fluid' pattern is both irrefutable and inactive *)
 

@@ -242,6 +242,11 @@ and pattern i ppf x =
   | Tpat_lazy p ->
       line i ppf "Ppat_lazy\n";
       pattern i ppf p;
+      (* MODIF *)
+  | Tpat_with (p, vbl) ->
+    line i ppf "Ppat_with\n";
+    pattern i ppf p;
+    list i value_binding ppf vbl
 
 and expression_extra i ppf x attrs =
   match x with

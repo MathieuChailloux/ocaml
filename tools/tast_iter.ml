@@ -75,6 +75,8 @@ let pattern sub pat =
   | Tpat_or (p1, p2, _) -> sub # pattern p1; sub # pattern p2
   | Tpat_alias (p, _, _)
   | Tpat_lazy p -> sub # pattern p
+    (* MODIF *)
+  | Tpat_with _ -> Misc.fatal_error "Tast_iter.pattern"
 
 let expression sub exp =
   let extra = function
