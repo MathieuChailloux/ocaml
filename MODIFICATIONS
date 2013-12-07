@@ -55,13 +55,21 @@ l. 246 - 249
 typing/parmatch.ml
 l. 237 - 248
    Pretty-printing du match
-l.410
-l.993
-l. 1829 - 1833
+l. 420 - 422
+   Normalisation du pattern (est-ce que ça suffit?)
+l. 1006 - 1008
+   has_instance : trouver ce que ça fait
+l. 1040 - 1042
+   satisfiable : trouver ce que ça fait
+   => en rapport avec l'exhaustivité du pattern
+
+l. 1848 - 1853
    Conversion d'un typedtree vers parsetree (je sais pas pourquoi.)
-l.1940
-l.2031
-   ajout du cas Tpat_with pour la compil (todo : le faire vraiment)
+l. 1966
+   Fragile check (todo : voir ce que ça fait)
+
+l. 2062
+   Teste l'inactivité du pattern (si il est utile ou non)
 
 typing/typedtreeIter.ml
 l.219 - 220

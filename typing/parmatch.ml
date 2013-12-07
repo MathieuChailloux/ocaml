@@ -417,7 +417,9 @@ let rec normalize_pat q = match q.pat_desc with
   | Tpat_lazy _ ->
       make_pat (Tpat_lazy omega) q.pat_type q.pat_env
   | Tpat_or _ -> fatal_error "Parmatch.normalize_pat"
-  | Tpat_with _ -> fatal_error "Parmatch.normalize_pat"
+  (**** MODIF ****)
+  | Tpat_with (p, vbl) -> 
+    make_pat (Tpat_with (normalize_pat p, vbl)) q.pat_type q.pat_env
 
 (*
   Build normalized (cf. supra) discriminating pattern,
@@ -1000,6 +1002,8 @@ let rec has_instance p = match p.pat_desc with
   | Tpat_record (lps,_) -> has_instances (List.map (fun (_,_,x) -> x) lps)
   | Tpat_lazy p
     -> has_instance p
+
+  (**** MODIF ****)
   | Tpat_with _ -> fatal_error "Parmatch.has_instance"
 
 
@@ -1032,6 +1036,11 @@ let rec satisfiable pss qs = match pss with
               satisfiable (filter_extra pss) qs
         end
     | {pat_desc=Tpat_variant (l,_,r)}::_ when is_absent l r -> false
+      
+    (**** MODIF ****)
+    | {pat_desc=Tpat_with _; _}::qs -> 
+      fatal_error "Parmatch.satisfiable"
+
     | q::qs ->
         let q0 = discr_pat q pss in
         satisfiable (filter_one q0 pss) (simple_match_args q0 q @ qs)
@@ -1839,7 +1848,8 @@ module Conv = struct
       (**** MODIF ****)
       | Tpat_with (p, _ (* bindings *)) -> 
 	let results = loop p in
-	(* Todo : convert Typedtree.bindings to Parsetree.bindings *)
+	(* Todo? : convert Typedtree.bindings to Parsetree.bindings *)
+	print_endline "TODO: conv bindings";
 	List.map (fun p -> mkpat (Ppat_with (p, []))) results
 
     in
@@ -1952,8 +1962,12 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
     collect_paths_from_pat (collect_paths_from_pat r p1) p2
 | Tpat_lazy p ->
     collect_paths_from_pat r p
-| Tpat_with _ -> fatal_error "Parmatch.collect_paths_from_pat"
 
+(**** MODIF ****)
+| Tpat_with (p, _) ->
+  collect_paths_from_pat r p
+  
+  
 
 (*
   Actual fragile check
@@ -2042,8 +2056,10 @@ let rec inactive pat = match pat with
 | Tpat_record (ldps,_) ->
     List.exists (fun (_, _, p) -> inactive p.pat_desc) ldps
 | Tpat_or (p,q,_) ->
-    inactive p.pat_desc && inactive q.pat_desc
-| Tpat_with _ -> fatal_error "Parmatch.inactive"
+  inactive p.pat_desc && inactive q.pat_desc
+(**** MODIF ****)
+| Tpat_with (p, _) -> 
+  inactive p.pat_desc
 
 (* A `fluid' pattern is both irrefutable and inactive *)
 
