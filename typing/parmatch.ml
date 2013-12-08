@@ -102,6 +102,8 @@ let rec compat p q =
   | Tpat_array ps, Tpat_array qs ->
       List.length ps = List.length qs &&
       compats ps qs
+      (* MODIF *)
+  | Tpat_with (p1, _), Tpat_with (p2, _) -> compat p1 p2
   | _,_  ->
       assert false
 
@@ -387,6 +389,8 @@ let rec simple_match_args p1 p2 = match p2.pat_desc with
     | Tpat_lazy _ -> [omega]
     | _ -> []
     end
+      (* MODIF *)
+| Tpat_with (p2, _) -> simple_match_args p1 p2
 | _ -> []
 
 (*

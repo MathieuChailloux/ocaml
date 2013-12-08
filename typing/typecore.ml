@@ -20,6 +20,10 @@ open Typedtree
 open Btype
 open Ctype
 
+(* MODIF *)
+let type_binding_callback =
+  ref (fun _ _ _ _ -> [], Env.empty)
+
 type error =
     Polymorphic_label of Longident.t
   | Constructor_arity_mismatch of Longident.t * int * int
@@ -1193,8 +1197,20 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
       raise (Error (s.loc, !env, Extension s.txt))
   
   (**** MODIF ****)
-  | Ppat_with (p, _ (*bindings*)) ->
-    type_pat p expected_ty
+  | Ppat_with (p, bindings) ->
+    let tp = type_pat p expected_ty in
+    let (new_bindings, new_env) =
+      !type_binding_callback !env Nonrecursive bindings None
+    in
+    rp
+      {
+	pat_desc = Tpat_with (tp,new_bindings);
+	pat_loc = loc;
+	pat_extra = [];
+	pat_type = tp.pat_type;
+	pat_attributes = sp.ppat_attributes;
+	pat_env = new_env
+      }
 
 let type_pat ?(allow_existentials=false) ?constrs ?labels
     ?(lev=get_current_level()) env sp expected_ty =
@@ -3608,6 +3624,9 @@ let type_binding env rec_flag spat_sexp_list scope =
       env rec_flag spat_sexp_list scope false
   in
   (pat_exp_list, new_env)
+
+(* MODIF *)
+let _ = type_binding_callback := type_binding
 
 let type_let env rec_flag spat_sexp_list scope =
   let (pat_exp_list, new_env, unpacks) =
