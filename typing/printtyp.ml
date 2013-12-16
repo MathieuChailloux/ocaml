@@ -1451,3 +1451,33 @@ let report_ambiguous_type_error ppf env (tp0, tp0') tpl txt1 txt2 txt3 =
            @]"
           txt2 type_path_list tpl
           txt3 (type_path_expansion tp0) tp0')
+
+
+(* ocaml-with MODIF *)
+open Env
+open Format
+
+let rec print_summary =
+  function
+  | Env_empty -> fprintf std_formatter "end\n"
+  | Env_value (s, id, vd) ->
+    value_description id std_formatter vd;
+    fprintf std_formatter ",\n";
+    print_summary s
+  | Env_type (s, id, td) ->
+    type_declaration id std_formatter td;
+    fprintf std_formatter ",\n";
+    print_summary s;
+  | Env_exception (s, _, _)
+  | Env_module (s, _, _)
+  | Env_modtype (s, _, _)
+  | Env_class (s, _, _)
+  | Env_cltype (s, _, _)
+  | Env_open  (s, _) ->
+    fprintf std_formatter "other stuff,\n";
+    print_summary s
+
+and print_env env =
+  fprintf std_formatter "\n[\n";
+  print_summary (summary env);
+  fprintf std_formatter "]\n"
