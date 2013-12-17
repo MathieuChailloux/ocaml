@@ -23,6 +23,17 @@ open Ctype
 (* MODIF *)
 let type_binding_callback =
   ref (fun _ _ _ _ -> [], Env.empty)
+let add_pattern_variables_callback =
+  ref (fun ?check ?check_as _ -> (Env.empty, []))
+let type_pattern_callback =
+  ref (fun _ _ _ _ _ -> (Tpat_any, Env.empty, [], []))
+
+let with_env = ref Env.empty
+
+    
+
+
+(* END MODIF *)
 
 type error =
     Polymorphic_label of Longident.t
@@ -911,8 +922,8 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
         pat_attributes = sp.ppat_attributes;
         pat_env = !env }
   | Ppat_var name ->
-      let id = enter_variable loc name expected_ty in
-      rp {
+    let id = enter_variable loc name expected_ty in
+    rp {
         pat_desc = Tpat_var (id, name);
         pat_loc = loc; pat_extra=[];
         pat_type = expected_ty;
@@ -1198,10 +1209,27 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
   
   (**** MODIF ****)
   | Ppat_with (p, bindings) ->
+    Format.fprintf Format.std_formatter "\ntype_pat with 1";
+    Printtyp.print_env !env;
+
     let tp = type_pat p expected_ty in
+    let initial_pattern_variables = !pattern_variables in
+
     let (new_bindings, new_env) =
       !type_binding_callback !env Nonrecursive bindings None
     in
+
+    Format.fprintf Format.std_formatter "\ntype_pat with 2 (bindings added)";
+    Printtyp.print_env new_env;
+
+    env := new_env;
+
+    pattern_variables := initial_pattern_variables;
+    (*let (new_env, _) = !add_pattern_variables_callback new_env in
+    
+    Format.fprintf Format.std_formatter "\ntype_pat with 3 (initial variables added)";
+    Printtyp.print_env new_env;*)
+
     rp
       {
 	pat_desc = Tpat_with (tp,new_bindings);
@@ -1267,14 +1295,26 @@ let add_pattern_variables ?check ?check_as env =
      pv env,
    get_ref module_variables)
 
+let _ = add_pattern_variables_callback := add_pattern_variables
+
 let type_pattern ~lev env spat scope expected_ty =
   reset_pattern scope true;
   let new_env = ref env in
   let pat = type_pat ~allow_existentials:true ~lev new_env spat expected_ty in
+  
+  (* MODIF *)
+  Format.fprintf Format.std_formatter "\ntype_pattern1";
+  Printtyp.print_env !new_env;
+
   let new_env, unpacks =
     add_pattern_variables !new_env
       ~check:(fun s -> Warnings.Unused_var_strict s)
       ~check_as:(fun s -> Warnings.Unused_var s) in
+
+  (* MODIF *)
+  Format.fprintf Format.std_formatter "\ntype_pattern2";
+  Printtyp.print_env new_env;
+
   (pat, new_env, get_ref pattern_force, unpacks)
 
 let type_pattern_list env spatl scope expected_tys allow =
@@ -3343,6 +3383,11 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
         in
         if !Clflags.principal then begin_def (); (* propagation of pattern *)
         let scope = Some (Annot.Idef loc) in
+	
+	(* MODIF *)
+	Format.fprintf Format.std_formatter "\ntyping case 1";
+	Printtyp.print_env env;
+
         let (pat, ext_env, force, unpacks) =
           let partial =
             if !Clflags.principal || erase_either
@@ -3350,6 +3395,11 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
           let ty_arg = instance ?partial env ty_arg in
           type_pattern ~lev env pc_lhs scope ty_arg
         in
+
+	(* MODIF *)
+	Format.fprintf Format.std_formatter "\ntyping case 2";
+	Printtyp.print_env ext_env;
+
         pattern_force := force @ !pattern_force;
         let pat =
           if !Clflags.principal then begin

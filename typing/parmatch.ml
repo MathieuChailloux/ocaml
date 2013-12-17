@@ -422,8 +422,9 @@ let rec normalize_pat q = match q.pat_desc with
       make_pat (Tpat_lazy omega) q.pat_type q.pat_env
   | Tpat_or _ -> fatal_error "Parmatch.normalize_pat"
   (**** MODIF ****)
-  | Tpat_with (p, vbl) -> 
-    make_pat (Tpat_with (normalize_pat p, vbl)) q.pat_type q.pat_env
+  | Tpat_with (p, vbl) ->
+    failwith "Parmatch.normalize_pat"
+    (*make_pat (Tpat_with (normalize_pat p, vbl)) q.pat_type q.pat_env*)
 
 (*
   Build normalized (cf. supra) discriminating pattern,

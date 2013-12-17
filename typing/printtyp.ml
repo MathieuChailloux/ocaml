@@ -1465,19 +1465,19 @@ let rec print_summary =
     fprintf std_formatter ",\n";
     print_summary s
   | Env_type (s, id, td) ->
-    type_declaration id std_formatter td;
-    fprintf std_formatter ",\n";
-    print_summary s;
+    fprintf std_formatter "type %s, " id.Ident.name;
+    print_summary s
   | Env_exception (s, _, _)
   | Env_module (s, _, _)
   | Env_modtype (s, _, _)
   | Env_class (s, _, _)
   | Env_cltype (s, _, _)
   | Env_open  (s, _) ->
-    fprintf std_formatter "other stuff,\n";
+    fprintf std_formatter "other stuff, ";
     print_summary s
 
-and print_env env =
+and print_env _ (*env*) = ()
+  (*
   fprintf std_formatter "\n[\n";
   print_summary (summary env);
-  fprintf std_formatter "]\n"
+  fprintf std_formatter "]\n"*)

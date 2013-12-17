@@ -2521,6 +2521,7 @@ let arg_to_var arg cls = match arg with
 *)
 
 let rec compile_match repr partial ctx m = match m with
+| { cases = ([{pat_desc = Tpat_with _}], _) :: _} -> failwith "Matching.compile_match"
 | { cases = [] } -> comp_exit ctx m
 | { cases = ([], action) :: rem } ->
     if is_guarded action then begin
