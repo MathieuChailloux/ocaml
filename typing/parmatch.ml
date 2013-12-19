@@ -103,7 +103,8 @@ let rec compat p q =
       List.length ps = List.length qs &&
       compats ps qs
       (* MODIF *)
-  | Tpat_with (p1, _), Tpat_with (p2, _) -> compat p1 p2
+  | Tpat_with (p1, _), _ -> compat p1 q
+  | _, Tpat_with (q1, _) -> compat p q1
   | _,_  ->
       assert false
 
@@ -422,8 +423,8 @@ let rec normalize_pat q = match q.pat_desc with
       make_pat (Tpat_lazy omega) q.pat_type q.pat_env
   | Tpat_or _ -> fatal_error "Parmatch.normalize_pat"
   (**** MODIF ****)
-  | Tpat_with (p, vbl) ->
-    failwith "Parmatch.normalize_pat"
+  | Tpat_with (p, _) ->
+    normalize_pat p
     (*make_pat (Tpat_with (normalize_pat p, vbl)) q.pat_type q.pat_env*)
 
 (*
@@ -1043,8 +1044,8 @@ let rec satisfiable pss qs = match pss with
     | {pat_desc=Tpat_variant (l,_,r)}::_ when is_absent l r -> false
       
     (**** MODIF ****)
-    | {pat_desc=Tpat_with _; _}::qs -> 
-      fatal_error "Parmatch.satisfiable"
+    | {pat_desc=Tpat_with (q, _); _}::qs -> 
+      satisfiable pss (q::qs)
 
     | q::qs ->
         let q0 = discr_pat q pss in

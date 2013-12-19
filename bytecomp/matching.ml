@@ -600,6 +600,10 @@ let simplify_cases args cls = match args with
               | _ ->
                   simplify ((pat_simple::patl,action) :: rem)
               end
+	  (* MODIF *)
+	  | Tpat_with (p, _) ->
+	    simplify ((p :: patl, action) :: rem)
+
           | _ -> cl :: simplify rem
           end
       | _ -> assert false in
@@ -615,6 +619,8 @@ let rec what_is_cases cases = match cases with
 | ({pat_desc=Tpat_any} :: _, _) :: rem -> what_is_cases rem
 | (({pat_desc=(Tpat_var _|Tpat_or (_,_,_)|Tpat_alias (_,_,_))}::_),_)::_
   -> assert false (* applies to simplified matchings only *)
+| (({pat_desc=Tpat_with _}::_),_)::_ ->
+  fatal_error "Matching.what_is_cases"
 | (p::_,_)::_ -> p
 | [] -> omega
 | _ -> assert false
@@ -699,6 +705,8 @@ let rec explode_or_pat arg patl mk_action rem vars aliases = function
   | {pat_desc = Tpat_var (x, _)} ->
       let env = mk_alpha_env arg (x::aliases) vars in
       (omega::patl,mk_action (List.map snd env))::rem
+  | {pat_desc = Tpat_with _} ->
+    fatal_error "Matching.explode_or_pat"
   | p ->
       let env = mk_alpha_env arg aliases vars in
       (alpha_pat env p::patl,mk_action (List.map snd env))::rem
@@ -2652,7 +2660,8 @@ let find_in_pat pred =
     | Tpat_constant _ | Tpat_var _
     | Tpat_any | Tpat_variant (_,None,_) -> false
       (* MODIF *)
-    | Tpat_with _ -> fatal_error "Matching.find_in_pat"
+    | Tpat_with (p, _) -> (*fatal_error "Matching.find_in_pat"*)
+      find_rec p
   end in
   find_rec
 
@@ -2750,6 +2759,7 @@ let partial_function loc () =
                Const_base(Const_int char)]))])])
 
 let for_function loc repr param pat_act_list partial =
+  Format.fprintf Format.std_formatter "Matching.for_function";
   compile_matching loc repr (partial_function loc) param pat_act_list partial
 
 (* In the following two cases, exhaustiveness info is not available! *)
@@ -2918,6 +2928,7 @@ let bind_opt (v,eo) k = match eo with
 | Some e ->  Lambda.bind Strict v e k
 
 let for_multiple_match loc paraml pat_act_list partial =
+  Format.fprintf Format.std_formatter "for_multiple_match";
   let v_paraml = List.map param_to_var paraml in
   let paraml = List.map (fun (v,_) -> Lvar v) v_paraml in
   List.fold_right bind_opt v_paraml
