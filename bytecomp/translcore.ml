@@ -914,7 +914,12 @@ and transl_guard guard rhs =
       event_before cond (Lifthenelse(transl_exp cond, expr, staticfail))
 
 and transl_case {c_lhs; c_guard; c_rhs} =
-  c_lhs, transl_guard c_guard c_rhs
+  (* MODIF *)
+  match c_lhs.pat_desc with
+  | Tpat_with (p, bindings) ->
+    c_lhs, transl_guard c_guard {c_rhs with exp_desc = Texp_let (Recursive, bindings, c_rhs)}
+
+  | _ -> c_lhs, transl_guard c_guard c_rhs
 
 and transl_cases cases =
   List.map transl_case cases

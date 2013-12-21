@@ -21,7 +21,7 @@ open Lambda
 open Parmatch
 open Printf
 
-let dbg = false
+let dbg = true
 
 (*  See Peyton-Jones, ``The Implementation of functional programming
     languages'', chapter 5. *)
@@ -679,7 +679,12 @@ let rec extract_vars r p = match p.pat_desc with
 | Tpat_or (p,_,_) -> extract_vars r p
 | Tpat_constant _|Tpat_any|Tpat_variant (_,None,_) -> r
   (* MODIF *)
-| Tpat_with _ -> fatal_error "Matching.extract_vars"
+| Tpat_with (p, pel) ->
+  List.fold_left
+    (fun acc {vb_pat} ->
+      extract_vars acc vb_pat)
+    (extract_vars r p)
+    pel
 
 exception Cannot_flatten
 
@@ -705,8 +710,9 @@ let rec explode_or_pat arg patl mk_action rem vars aliases = function
   | {pat_desc = Tpat_var (x, _)} ->
       let env = mk_alpha_env arg (x::aliases) vars in
       (omega::patl,mk_action (List.map snd env))::rem
-  | {pat_desc = Tpat_with _} ->
-    fatal_error "Matching.explode_or_pat"
+	(* MODIF *)
+  (*| {pat_desc = Tpat_with _} ->
+    fatal_error "Matching.explode_or_pat"*)
   | p ->
       let env = mk_alpha_env arg aliases vars in
       (alpha_pat env p::patl,mk_action (List.map snd env))::rem
@@ -1141,6 +1147,9 @@ and precompile_or argo cls ors args def k = match ors with
     k
 
 let split_precompile argo pm =
+  (* MODIF *)
+  Format.fprintf Format.std_formatter "split_precompile\n";
+
   let {me=next}, nexts = split_or argo pm.cases pm.args pm.default  in
   if dbg && (nexts <> [] || (match next with PmOr _ -> true | _ -> false))
   then begin
@@ -2529,7 +2538,8 @@ let arg_to_var arg cls = match arg with
 *)
 
 let rec compile_match repr partial ctx m = match m with
-| { cases = ([{pat_desc = Tpat_with _}], _) :: _} -> failwith "Matching.compile_match"
+(* MODIF *)
+(*| { cases = ([{pat_desc = Tpat_with _}], _) :: _} -> failwith "Matching.compile_match"*)
 | { cases = [] } -> comp_exit ctx m
 | { cases = ([], action) :: rem } ->
     if is_guarded action then begin
@@ -2759,7 +2769,7 @@ let partial_function loc () =
                Const_base(Const_int char)]))])])
 
 let for_function loc repr param pat_act_list partial =
-  Format.fprintf Format.std_formatter "Matching.for_function";
+  Format.fprintf Format.std_formatter "Matching.for_function\n";
   compile_matching loc repr (partial_function loc) param pat_act_list partial
 
 (* In the following two cases, exhaustiveness info is not available! *)
