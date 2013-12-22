@@ -29,6 +29,9 @@ let type_pattern_callback =
   ref (fun _ _ _ _ _ -> (Tpat_any, Env.empty, [], []))
 
 let under_with_scope = ref false
+let my_dbg = false
+let my_print =
+    Format.fprintf Format.std_formatter
     
 
 
@@ -916,7 +919,7 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
     type_pat ~constrs ~labels ~no_existentials ~mode ~env in
   
   (* MODIF *)
-  Format.fprintf Format.std_formatter "type_pat\n";
+  if my_dbg then my_print "type_pat\n";
 
   let loc = sp.ppat_loc in
   match sp.ppat_desc with
@@ -1016,7 +1019,7 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
         pat_attributes = sp.ppat_attributes;
         pat_env = !env }
   | Ppat_construct(lid, sarg) ->
-    Format.fprintf Format.std_formatter "type_pat constr\n";
+    if my_dbg then my_print "type_pat constr\n";
     let opath =
         try
           let (p0, p, _) = extract_concrete_variant !env expected_ty in
@@ -1061,7 +1064,7 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
                                      constr.cstr_arity, List.length sargs)));
       
       (* MODIF *)
-      Format.fprintf Format.std_formatter "newtype_level =%s\n"
+      if my_dbg then Format.fprintf Format.std_formatter "newtype_level =%s\n"
 	(match !newtype_level with Some n -> string_of_int n | None -> "None");
 
       let (ty_args, ty_res) =
@@ -1157,7 +1160,7 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
         pat_env = !env }
   | Ppat_or(sp1, sp2) ->
     (* MODIF *)
-    Format.fprintf Format.std_formatter "type_pat or\n";
+    if my_dbg then Format.fprintf Format.std_formatter "type_pat or\n";
 
 
       let initial_pattern_variables = !pattern_variables in
@@ -1228,22 +1231,22 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
 
     under_with_scope := true;
 
-    Format.fprintf Format.std_formatter "type_pat with 1\n";
-    Printtyp.print_env !env;
-    Format.fprintf Format.std_formatter "pattern_variables = ";
-    List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+    if my_dbg then Format.fprintf Format.std_formatter "type_pat with 1\n";
+    if my_dbg then Printtyp.print_env !env;
+    if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+    List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
       !pattern_variables;
-    Format.fprintf Format.std_formatter "\n";
+    if my_dbg then Format.fprintf Format.std_formatter "\n";
 
     let tp = type_pat p expected_ty in
     (*let initial_pattern_variables = !pattern_variables in*)
 
-    Format.fprintf Format.std_formatter "newtype_lvl = %s\n"
+    if my_dbg then Format.fprintf Format.std_formatter "newtype_lvl = %s\n"
       (match !newtype_level with Some n -> string_of_int n | None -> "None");
-    Format.fprintf Format.std_formatter "pattern_variables = ";
-    List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+    if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+    List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
       !pattern_variables;
-    Format.fprintf Format.std_formatter "\n";
+    if my_dbg then Format.fprintf Format.std_formatter "\n";
 
     let initial_newtype_level = get_newtype_level () in
 
@@ -1253,19 +1256,19 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
 
     newtype_level := Some initial_newtype_level;
 
-    Format.fprintf Format.std_formatter "type_pat with 2 (bindings added)\n";
-    Printtyp.print_env new_env;
-    Format.fprintf Format.std_formatter "pattern_variables = ";
-    List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+    if my_dbg then Format.fprintf Format.std_formatter "type_pat with 2 (bindings added)\n";
+    if my_dbg then Printtyp.print_env new_env;
+    if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+    List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
       !pattern_variables;
-    Format.fprintf Format.std_formatter "\n";
+    if my_dbg then Format.fprintf Format.std_formatter "\n";
 
     env := new_env;
 
     (*pattern_variables := initial_pattern_variables;*)
     
-    Format.fprintf Format.std_formatter "\ntype_pat with 3 (initial variables added)";
-    Printtyp.print_env new_env;
+    if my_dbg then Format.fprintf Format.std_formatter "\ntype_pat with 3 (initial variables added)";
+    if my_dbg then Printtyp.print_env new_env;
 
     under_with_scope := false;
 
@@ -1284,11 +1287,11 @@ let type_pat ?(allow_existentials=false) ?constrs ?labels
   newtype_level := Some lev;
   
   (* MODIF *)
-  Format.fprintf Format.std_formatter "type_pat wrapper 1\n";
-  Format.fprintf Format.std_formatter "pattern_variables = ";
-  List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+  if my_dbg then Format.fprintf Format.std_formatter "type_pat wrapper 1\n";
+  if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+  List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
     !pattern_variables;
-  Format.fprintf Format.std_formatter "\n";
+  if my_dbg then Format.fprintf Format.std_formatter "\n";
 
   try
     let r =
@@ -1297,11 +1300,11 @@ let type_pat ?(allow_existentials=false) ?constrs ?labels
     iter_pattern (fun p -> p.pat_env <- !env) r;
 
     (* MODIF *)
-    Format.fprintf Format.std_formatter "type_pat wrapper 2\n";
-    Format.fprintf Format.std_formatter "pattern_variables = ";
-    List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+    if my_dbg then Format.fprintf Format.std_formatter "type_pat wrapper 2\n";
+    if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+    List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
       !pattern_variables;
-    Format.fprintf Format.std_formatter "\n";
+    if my_dbg then Format.fprintf Format.std_formatter "\n";
 
     newtype_level := None;
     r
@@ -1357,25 +1360,25 @@ let _ = add_pattern_variables_callback := add_pattern_variables
 
 let type_pattern ~lev env spat scope expected_ty =
 
-  Format.fprintf Format.std_formatter "type_pattern 1\n";
-  Format.fprintf Format.std_formatter "pattern_variables = ";
-  List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+  if my_dbg then Format.fprintf Format.std_formatter "type_pattern 1\n";
+  if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+  List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
     !pattern_variables;
-  Format.fprintf Format.std_formatter "\n";
+  if my_dbg then Format.fprintf Format.std_formatter "\n";
 
   reset_pattern scope true;
   let new_env = ref env in
   let pat = type_pat ~allow_existentials:true ~lev new_env spat expected_ty in
   
   (* MODIF *)
-  Format.fprintf Format.std_formatter "type_pattern 2\n";
-  Printtyp.print_env !new_env;
-  Format.fprintf Format.std_formatter "pattern_variables = ";
-  List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+  if my_dbg then Format.fprintf Format.std_formatter "type_pattern 2\n";
+  if my_dbg then Printtyp.print_env !new_env;
+  if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+  List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
     !pattern_variables;
-  Format.fprintf Format.std_formatter "\n";
+  if my_dbg then Format.fprintf Format.std_formatter "\n";
 
-  Format.fprintf Format.std_formatter "under_with_scope = %b\n" !under_with_scope;
+  if my_dbg then Format.fprintf Format.std_formatter "under_with_scope = %b\n" !under_with_scope;
 
   let new_env, unpacks =
     add_pattern_variables !new_env
@@ -1384,12 +1387,12 @@ let type_pattern ~lev env spat scope expected_ty =
   in
 
   (* MODIF *)
-  Format.fprintf Format.std_formatter "type_pattern 3\n";
-  Printtyp.print_env new_env;
-  Format.fprintf Format.std_formatter "pattern_variables = ";
-  List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+  if my_dbg then Format.fprintf Format.std_formatter "type_pattern 3\n";
+  if my_dbg then Printtyp.print_env new_env;
+  if my_dbg then Format.fprintf Format.std_formatter "pattern_variables = ";
+  List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
     !pattern_variables;
-  Format.fprintf Format.std_formatter "\n";
+  if my_dbg then Format.fprintf Format.std_formatter "\n";
 
   (pat, new_env, get_ref pattern_force, unpacks)
 
@@ -3459,8 +3462,8 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
         let scope = Some (Annot.Idef loc) in
 	
 	(* MODIF *)
-	Format.fprintf Format.std_formatter "typing case 1\n";
-	Printtyp.print_env env;
+	if my_dbg then Format.fprintf Format.std_formatter "typing case 1\n";
+	if my_dbg then Printtyp.print_env env;
 
         let (pat, ext_env, force, unpacks) =
           let partial =
@@ -3471,8 +3474,8 @@ and type_cases ?in_function env ty_arg ty_res partial_flag loc caselist : Typedt
         in
 
 	(* MODIF *)
-	Format.fprintf Format.std_formatter "typing case 2\n";
-	Printtyp.print_env ext_env;
+	if my_dbg then Format.fprintf Format.std_formatter "typing case 2\n";
+	if my_dbg then Printtyp.print_env ext_env;
 
         pattern_force := force @ !pattern_force;
         let pat =
@@ -3593,19 +3596,19 @@ and type_let ?(check = fun s -> Warnings.Unused_var s)
   let nvs = List.map (fun _ -> newvar ()) spatl in
 
   (* MODIF *)
-  Format.fprintf Format.std_formatter "[type_let 1] pattern_variables = ";
-  List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+  if my_dbg then Format.fprintf Format.std_formatter "[type_let 1] pattern_variables = ";
+  List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
     !pattern_variables;
-  Format.fprintf Format.std_formatter "\n";
+  if my_dbg then Format.fprintf Format.std_formatter "\n";
 
   let (pat_list, new_env, force, unpacks) =
     type_pattern_list env spatl scope nvs allow in
 
   (* MODIF *)
-  Format.fprintf Format.std_formatter "[type_let 2] pattern_variables = ";
-  List.iter (fun (id,_,_,_,_) -> Format.fprintf Format.std_formatter "%s, " (Ident.name id))
+  if my_dbg then Format.fprintf Format.std_formatter "[type_let 2] pattern_variables = ";
+  List.iter (fun (id,_,_,_,_) -> if my_dbg then Format.fprintf Format.std_formatter "%s, " (Ident.name id))
     !pattern_variables;
-  Format.fprintf Format.std_formatter "\n";
+  if my_dbg then Format.fprintf Format.std_formatter "\n";
 
   let is_recursive = (rec_flag = Recursive) in
   (* If recursive, first unify with an approximation of the expression *)

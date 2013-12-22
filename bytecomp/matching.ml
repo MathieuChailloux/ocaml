@@ -21,7 +21,7 @@ open Lambda
 open Parmatch
 open Printf
 
-let dbg = true
+let dbg = false
 
 (*  See Peyton-Jones, ``The Implementation of functional programming
     languages'', chapter 5. *)

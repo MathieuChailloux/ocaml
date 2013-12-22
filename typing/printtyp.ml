@@ -1476,8 +1476,7 @@ let rec print_summary =
     fprintf std_formatter "other stuff, ";
     print_summary s
 
-and print_env _ (*env*) = ()
-  (*
+and print_env env =
   fprintf std_formatter "\n[\n";
   print_summary (summary env);
-  fprintf std_formatter "]\n"*)
+  fprintf std_formatter "]\n"

@@ -915,6 +915,9 @@ and transl_guard guard rhs =
 
 and transl_case {c_lhs; c_guard; c_rhs} =
   (* MODIF *)
+  Format.fprintf Format.std_formatter "transl_case\n";
+  Printtyp.print_env c_rhs.exp_env;
+  
   match c_lhs.pat_desc with
   | Tpat_with (p, bindings) ->
     c_lhs, transl_guard c_guard {c_rhs with exp_desc = Texp_let (Recursive, bindings, c_rhs)}
