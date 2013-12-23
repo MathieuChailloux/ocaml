@@ -31,3 +31,6 @@ val dump : string option -> unit;;
 
 val get_location : annotation -> Location.t;;
 val get_info : unit -> annotation list;;
+
+(* MODIF *)
+val print_location : out_channel -> Location.t -> unit

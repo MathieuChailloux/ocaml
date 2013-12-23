@@ -39,3 +39,8 @@ val make_test_sequence:
         (Asttypes.constant * lambda) list -> lambda
 
 val inline_lazy_force : lambda -> Location.t -> lambda
+
+
+(* MODIF *)
+
+val transl_exp_callback : (expression -> lambda) ref

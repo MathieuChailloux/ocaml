@@ -414,6 +414,9 @@ let rec comp_expr env exp sz cont =
   if sz > !max_stack_used then max_stack_used := sz;
   match exp with
     Lvar id ->
+      (* MODIF *)
+      Format.fprintf Format.std_formatter "comp_expr Lvar %a\n" Ident.print id;
+
       begin try
         let pos = Ident.find_same id env.ce_stack in
         Kacc(sz - pos) :: cont

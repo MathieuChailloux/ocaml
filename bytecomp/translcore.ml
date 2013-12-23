@@ -915,14 +915,15 @@ and transl_guard guard rhs =
 
 and transl_case {c_lhs; c_guard; c_rhs} =
   (* MODIF *)
-  Format.fprintf Format.std_formatter "transl_case\n";
-  Printtyp.print_env c_rhs.exp_env;
-  
+  (*Format.fprintf Format.std_formatter "transl_case at ";
+  Stypes.print_location stdout c_rhs.exp_loc;
+  Printtyp.print_env c_rhs.exp_env;*)
+  (*
   match c_lhs.pat_desc with
   | Tpat_with (p, bindings) ->
     c_lhs, transl_guard c_guard {c_rhs with exp_desc = Texp_let (Recursive, bindings, c_rhs)}
 
-  | _ -> c_lhs, transl_guard c_guard c_rhs
+  | _ ->*) c_lhs, transl_guard c_guard c_rhs
 
 and transl_cases cases =
   List.map transl_case cases
@@ -1160,3 +1161,7 @@ let () =
       | _ ->
         None
     )
+(* MODIF *)
+
+let _ =
+  Matching.transl_exp_callback := transl_exp

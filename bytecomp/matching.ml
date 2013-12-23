@@ -21,6 +21,9 @@ open Lambda
 open Parmatch
 open Printf
 
+(* MODIF *)
+let transl_exp_callback = ref (fun _ -> failwith "transl_exp_callback")
+
 let dbg = false
 
 (*  See Peyton-Jones, ``The Implementation of functional programming
@@ -128,6 +131,8 @@ let filter_matrix matcher pss =
             filter_rec ((p::ps)::rem)
         | Tpat_var _ ->
             filter_rec ((omega::ps)::rem)
+	| Tpat_with _ -> 
+	  fatal_error "Matching.filter_matrix"
         | _ ->
             begin
               let rem = filter_rec rem in
@@ -237,6 +242,8 @@ let filter_ctx q ctx =
             filter_rec ({l with right=p::ps}::rem)
         | Tpat_var _ ->
             filter_rec ({l with right=omega::ps}::rem)
+	| Tpat_with _ ->
+	  fatal_error "Matching.filter_ctx"
         | _ ->
             begin let rem = filter_rec rem in
             try
@@ -517,7 +524,9 @@ let rec exc_inside p = match p.pat_desc with
       List.exists (fun (_,_,p) -> exc_inside p) lps
   | Tpat_or (p1,p2,_) -> exc_inside p1 || exc_inside p2
     (* MODIF *)
-  | Tpat_with (p,_) -> exc_inside p
+  | Tpat_with (p, _) ->
+    (*fatal_error "Matching.exc_inside"*)
+    exc_inside p
 
 and exc_insides ps = List.exists exc_inside ps
 
@@ -551,6 +560,14 @@ let simplify_or p =
         with
         | Var q -> raise (Var {p with pat_desc = Tpat_alias (q,id,s)})
         end
+    (* MODIF *)
+    | {pat_desc = Tpat_with (q, bindings)} ->
+      begin try
+	      {p with pat_desc = Tpat_with (simpl_rec q,bindings)}
+        with
+        | Var q -> raise (Var {p with pat_desc = Tpat_with (q,bindings)})
+      end
+
     | {pat_desc = Tpat_or (p1,p2,o)} ->
         let q1 = simpl_rec p1 in
         begin try
@@ -601,8 +618,17 @@ let simplify_cases args cls = match args with
                   simplify ((pat_simple::patl,action) :: rem)
               end
 	  (* MODIF *)
-	  | Tpat_with (p, _) ->
-	    simplify ((p :: patl, action) :: rem)
+	  | Tpat_with (p, bindings) ->
+	    (*fatal_error "Matching.simplify_cases"*)
+	    let new_action =
+	      List.fold_left (fun acc {vb_pat; vb_expr} ->
+		match vb_pat.pat_desc with
+		| Tpat_var (id, _) -> bind Alias id (!transl_exp_callback vb_expr) acc
+		| _ -> Format.fprintf Format.std_formatter "binding chelou\n"; acc)
+		action
+		bindings
+	    in
+	    simplify ((p :: patl, new_action) :: rem)
 
           | _ -> cl :: simplify rem
           end
@@ -680,6 +706,7 @@ let rec extract_vars r p = match p.pat_desc with
 | Tpat_constant _|Tpat_any|Tpat_variant (_,None,_) -> r
   (* MODIF *)
 | Tpat_with (p, pel) ->
+  (*fatal_error "Matching.extract_vars"*)
   List.fold_left
     (fun acc {vb_pat} ->
       extract_vars acc vb_pat)
@@ -713,6 +740,7 @@ let rec explode_or_pat arg patl mk_action rem vars aliases = function
 	(* MODIF *)
   (*| {pat_desc = Tpat_with _} ->
     fatal_error "Matching.explode_or_pat"*)
+
   | p ->
       let env = mk_alpha_env arg aliases vars in
       (alpha_pat env p::patl,mk_action (List.map snd env))::rem
@@ -1093,6 +1121,8 @@ and dont_precompile_var args cls def k =
 and is_exc p = match p.pat_desc with
 | Tpat_or (p1,p2,_) -> is_exc p1 || is_exc p2
 | Tpat_alias (p,v,_) -> is_exc p
+(* MODIF *)
+| Tpat_with (p, _) -> is_exc p
 | Tpat_construct (_,{cstr_tag = Cstr_exception _},_) -> true
 | _ -> false
 
@@ -1985,6 +2015,9 @@ let rec extract_pat seen k p = match p.pat_desc with
     extract_pat  seen k p
 | Tpat_var _|Tpat_any ->
     raise All
+(* MODIF *)
+| Tpat_with _ -> fatal_error "Matching.extract_pat"
+
 | _ ->
     let q = normalize_pat p in
     if  List.exists (compat q) seen then
@@ -2515,6 +2548,9 @@ let rec name_pattern default = function
       begin match pat.pat_desc with
         Tpat_var (id, _) -> id
       | Tpat_alias(p, id, _) -> id
+      (* MODIF *)
+      (*| Tpat_with _ -> fatal_error "Matching.name_pattern"*)
+	
       | _ -> name_pattern default rem
       end
   | _ -> Ident.create default

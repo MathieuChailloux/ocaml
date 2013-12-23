@@ -1229,6 +1229,12 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
   (**** MODIF ****)
   | Ppat_with (p, bindings) ->
 
+    print_string "Ppat : ";
+    List.iter (fun {pvb_pat} ->
+      match pvb_pat.ppat_desc with
+      | Ppat_var _ -> print_string "var, "
+      | _ -> print_string "other") bindings;
+
     under_with_scope := true;
 
     if my_dbg then Format.fprintf Format.std_formatter "type_pat with 1\n";
@@ -1253,6 +1259,12 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
     let (new_bindings, new_env) =
       !type_binding_callback !env Nonrecursive bindings None
     in
+
+    print_string "Tpat : ";
+    List.iter (fun {vb_pat} ->
+      match vb_pat.pat_desc with
+      | Tpat_var _ -> print_string "var, "
+      | _ -> print_string "other") new_bindings;
 
     newtype_level := Some initial_newtype_level;
 
