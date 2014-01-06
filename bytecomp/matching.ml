@@ -21,7 +21,7 @@ open Lambda
 open Parmatch
 open Printf
 
-(* MODIF *)
+(* MODIF *) 
 let transl_exp_callback = ref (fun _ -> failwith "transl_exp_callback")
 
 let dbg = false
@@ -1177,9 +1177,6 @@ and precompile_or argo cls ors args def k = match ors with
     k
 
 let split_precompile argo pm =
-  (* MODIF *)
-  Format.fprintf Format.std_formatter "split_precompile\n";
-
   let {me=next}, nexts = split_or argo pm.cases pm.args pm.default  in
   if dbg && (nexts <> [] || (match next with PmOr _ -> true | _ -> false))
   then begin
