@@ -25,8 +25,8 @@ let type_binding_callback =
   ref (fun _ _ _ _ -> [], Env.empty)
 let add_pattern_variables_callback =
   ref (fun ?check ?check_as _ -> (Env.empty, []))
-let type_pattern_callback =
-  ref (fun _ _ _ _ _ -> (Tpat_any, Env.empty, [], []))
+(*let type_pattern_callback =
+  ref (fun _ _ _ _ _ -> (Tpat_any, Env.empty, [], []))*)
 
 let under_with_scope = ref false
 let my_dbg = false
@@ -1260,11 +1260,11 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
       !type_binding_callback !env Nonrecursive bindings None
     in
 
-    print_string "Tpat : ";
+    (*print_string "Tpat : ";
     List.iter (fun {vb_pat} ->
       match vb_pat.pat_desc with
       | Tpat_var _ -> print_string "var, "
-      | _ -> print_string "other") new_bindings;
+      | _ -> print_string "other") new_bindings;*)
 
     newtype_level := Some initial_newtype_level;
 

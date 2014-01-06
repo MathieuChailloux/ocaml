@@ -17,6 +17,9 @@ open Asttypes
 open Types
 open Typedtree
 
+(* MODIF *)
+let my_print = Format.fprintf Format.std_formatter
+
 (*************************************)
 (* Utilities for building patterns   *)
 (*************************************)
@@ -665,7 +668,6 @@ let row_of_pat pat =
   Check whether the first column of env makes up a complete signature or
   not.
 *)
-
 let generalized_constructor x =
   match x with
     ({pat_desc = Tpat_construct(_,c,_);pat_env=env},_) ->
@@ -681,7 +683,9 @@ let clean_env env =
   in
   loop env
 
-let full_match ignore_generalized closing env =  match env with
+let full_match ignore_generalized closing env = 
+  my_print "full_match\n";
+match env with
 | ({pat_desc = Tpat_construct (_,{cstr_tag=Cstr_exception _},_)},_)::_ ->
     false
 | ({pat_desc = Tpat_construct(_,c,_);pat_type=typ},_) :: _ ->
@@ -1017,7 +1021,9 @@ and has_instances = function
   | [] -> true
   | q::rem -> has_instance q && has_instances rem
 
-let rec satisfiable pss qs = match pss with
+let rec satisfiable pss qs =
+my_print "satisfiable\n";
+match pss with
 | [] -> has_instances qs
 | _  ->
     match qs with
@@ -1089,7 +1095,9 @@ let rec try_many_gadt  f = function
   | (p,pss)::rest ->
       rappend (f (p, pss)) (try_many_gadt f rest)
 
-let rec exhaust ext pss n = match pss with
+let rec exhaust ext pss n =
+my_print "exhaust\n";
+match pss with
 | []    ->  Rsome (omegas n)
 | []::_ ->  Rnone
 | pss   ->
@@ -1175,7 +1183,8 @@ let print_pat pat =
 
 (* strictly more powerful than exhaust; however, exhaust
    was kept for backwards compatibility *)
-let rec exhaust_gadt (ext:Path.t option) pss n = match pss with
+let rec exhaust_gadt (ext:Path.t option) pss n =
+match pss with
 | []    ->  Rsome [omegas n]
 | []::_ ->  Rnone
 | pss   ->
@@ -1260,7 +1269,9 @@ let exhaust_gadt ext pss n =
    (even if it doesn't help in making the matching exhaustive).
 *)
 
-let rec pressure_variants tdefs = function
+let rec pressure_variants tdefs =
+my_print "pressure_variants\n";
+function
   | []    -> false
   | []::_ -> true
   | pss   ->

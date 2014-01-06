@@ -620,6 +620,7 @@ let simplify_cases args cls = match args with
 	  (* MODIF *)
 	  | Tpat_with (p, bindings) ->
 	    (*fatal_error "Matching.simplify_cases"*)
+	    Format.fprintf Format.std_formatter "Simplifying\n";
 	    let new_action =
 	      List.fold_left (fun acc {vb_pat; vb_expr} ->
 		match vb_pat.pat_desc with
@@ -2802,7 +2803,6 @@ let partial_function loc () =
                Const_base(Const_int char)]))])])
 
 let for_function loc repr param pat_act_list partial =
-  Format.fprintf Format.std_formatter "Matching.for_function\n";
   compile_matching loc repr (partial_function loc) param pat_act_list partial
 
 (* In the following two cases, exhaustiveness info is not available! *)
