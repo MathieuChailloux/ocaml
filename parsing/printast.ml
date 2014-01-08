@@ -232,6 +232,7 @@ and pattern i ppf x =
 
   (**** MODIF ****)
   | Ppat_with (p, bindings) ->
+    line i ppf "Ppat_with\n";
     pattern i ppf p;
     list i value_binding ppf bindings
 

@@ -18,3 +18,5 @@ val implementation : formatter -> structure -> unit;;
 
 val implementation_with_coercion :
     formatter -> (structure * module_coercion) -> unit;;
+
+val pattern : int -> formatter -> pattern -> unit

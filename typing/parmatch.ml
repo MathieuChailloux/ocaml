@@ -18,7 +18,8 @@ open Types
 open Typedtree
 
 (* MODIF *)
-let my_print = Format.fprintf Format.std_formatter
+let my_dbg = false
+let my_print = if my_dbg then Format.fprintf Format.std_formatter else (fun _ -> ())
 
 (*************************************)
 (* Utilities for building patterns   *)
@@ -460,6 +461,11 @@ let discr_pat q pss =
       acc_pat
         (make_pat (Tpat_record (new_omegas, closed)) p.pat_type p.pat_env)
         pss
+
+  (* MODIF *)
+  | ({pat_desc = Tpat_with (p,_)}::ps)::pss ->
+    acc_pat acc ((p::ps)::pss)
+
   | _ -> acc in
 
   match normalize_pat q with
@@ -540,6 +546,10 @@ let filter_one q pss =
         filter_rec ((p::ps)::pss)
     | ({pat_desc = Tpat_or(p1,p2,_)}::ps)::pss ->
         filter_rec ((p1::ps)::(p2::ps)::pss)
+    (* MODIF *)
+    | ({pat_desc = Tpat_with(p,_)}::ps)::pss ->
+        filter_rec ((p::ps)::pss)
+
     | (p::ps)::pss ->
         if simple_match q p
         then (simple_match_args q p @ ps) :: filter_rec pss
@@ -560,6 +570,10 @@ let filter_extra pss =
         filter_rec ((p1::ps)::(p2::ps)::pss)
     | ({pat_desc = (Tpat_any | Tpat_var(_))} :: qs) :: pss ->
         qs :: filter_rec pss
+    (* MODIFS *)
+    | ({pat_desc = Tpat_with(p,_)}::ps)::pss ->
+      filter_rec ((p::ps)::pss)
+
     | _::pss  -> filter_rec pss
     | [] -> [] in
   filter_rec pss
@@ -595,6 +609,10 @@ let filter_all pat0 pss =
       filter_rec env ((p1::ps)::(p2::ps)::pss)
   | ({pat_desc = (Tpat_any | Tpat_var(_))}::_)::pss ->
       filter_rec env pss
+  (* MODIF *)
+  | ({pat_desc = Tpat_with(p,_)}::ps)::pss ->
+    filter_rec env ((p::ps)::pss)
+
   | (p::ps)::pss ->
       filter_rec (insert p ps env) pss
   | _ -> env
@@ -609,6 +627,10 @@ let filter_all pat0 pss =
         (List.map (fun (q,qss) -> (q,(simple_match_args q omega @ ps) :: qss))
            env)
         pss
+  (* MODIF *)
+  | ({pat_desc = Tpat_with(p,_)}::ps)::pss ->
+      filter_omega env ((p::ps)::pss)
+
   | _::pss -> filter_omega env pss
   | [] -> env in
 
@@ -635,6 +657,11 @@ let rec mark_partial = function
       mark_partial ((p1::ps)::(p2::ps)::pss)
   | ({pat_desc = (Tpat_any | Tpat_var(_))} :: _ as ps) :: pss ->
       ps :: mark_partial pss
+  (* MODIF *)
+  | ({pat_desc = Tpat_with(p,_)}::ps)::pss ->
+    failwith "mark_partial"
+      (*mark_partial ((p::ps)::pss)*)
+
   | ps::pss  ->
       (set_last zero ps) :: mark_partial pss
   | [] -> []
@@ -685,6 +712,7 @@ let clean_env env =
 
 let full_match ignore_generalized closing env = 
   my_print "full_match\n";
+  Printtyped.pattern 0 Format.std_formatter (fst (List.hd env));
 match env with
 | ({pat_desc = Tpat_construct (_,{cstr_tag=Cstr_exception _},_)},_)::_ ->
     false
@@ -1014,7 +1042,7 @@ let rec has_instance p = match p.pat_desc with
     -> has_instance p
 
   (**** MODIF ****)
-  | Tpat_with _ -> fatal_error "Parmatch.has_instance"
+  | Tpat_with (p, _) -> has_instance p
 
 
 and has_instances = function
@@ -1096,21 +1124,31 @@ let rec try_many_gadt  f = function
       rappend (f (p, pss)) (try_many_gadt f rest)
 
 let rec exhaust ext pss n =
+(* MODIF *)
 my_print "exhaust\n";
+
 match pss with
 | []    ->  Rsome (omegas n)
 | []::_ ->  Rnone
 | pss   ->
+  my_print "exhaust pss\n";
     let q0 = discr_pat omega pss in
     begin match filter_all q0 pss with
           (* first column of pss is made of variables only *)
     | [] ->
+      my_print "exhaust empty\n";
         begin match exhaust ext (filter_extra pss) (n-1) with
         | Rsome r -> Rsome (q0::r)
         | r -> r
       end
     | constrs ->
-        let try_non_omega (p,pss) =
+      (* MODIF *)
+      my_print "exhaust constrs\n";
+
+      let try_non_omega (p,pss) =
+	(* MODIF *)
+	my_print "non omega\n";
+
           if is_absent_pat p then
             Rnone
           else
@@ -1134,6 +1172,9 @@ match pss with
              * D non-exhaustive => we have a non-filtered value
           *)
           let r =  exhaust ext (filter_extra pss) (n-1) in
+	  (* MODIF *)
+	  my_print "non full_match\n";
+
           match r with
           | Rnone -> Rnone
           | Rsome r ->
@@ -1270,6 +1311,7 @@ let exhaust_gadt ext pss n =
 *)
 
 let rec pressure_variants tdefs =
+(* MODIF *)
 my_print "pressure_variants\n";
 function
   | []    -> false
@@ -1411,6 +1453,10 @@ let filter_one q rs =
             ({r with active = p1::ps}::
              {r with active = p2::ps}::
              rem)
+      (* MODIF *)
+      | {pat_desc = Tpat_with(p,_)}::ps ->
+	filter_rec ({r with active = p::ps}::rem)
+
       | p::ps ->
           if simple_match q p then
             {r with active=simple_match_args q p @ ps} :: filter_rec rem
@@ -1575,6 +1621,11 @@ let rec le_pat p q =
   | Tpat_array(ps), Tpat_array(qs) ->
       List.length ps = List.length qs && le_pats ps qs
 (* In all other cases, enumeration is performed *)
+
+  (* MODIF *)
+  | Tpat_with (p, _), _ -> le_pat p q
+  | _, Tpat_with (q, _) -> le_pat p q
+
   | _,_  -> not (satisfiable [[p]] [q])
 
 and le_pats ps qs =
@@ -1628,6 +1679,11 @@ let rec lub p q = match p.pat_desc,q.pat_desc with
       when List.length ps = List.length qs ->
         let rs = lubs ps qs in
         make_pat (Tpat_array rs) p.pat_type p.pat_env
+
+(* MODIF *)
+| Tpat_with (p, _), _ -> failwith "TODO : lub"
+| _, Tpat_with (q, _) -> failwith "TODO : lub"
+
 | _,_  ->
     raise Empty
 
@@ -1717,6 +1773,9 @@ let do_filter_one q pss =
         filter_rec ((p::ps,loc)::pss)
     | ({pat_desc = Tpat_or(p1,p2,_)}::ps,loc)::pss ->
         filter_rec ((p1::ps,loc)::(p2::ps,loc)::pss)
+    (* MODIF *)
+    | ({pat_desc = Tpat_with(p,_)}::ps,loc)::pss -> failwith "do_filter_one"	  
+
     | (p::ps,loc)::pss ->
         if simple_match q p
         then (simple_match_args q p @ ps, loc) :: filter_rec pss
@@ -1875,7 +1934,11 @@ module Conv = struct
 end
 
 
-let do_check_partial ?pred exhaust loc casel pss = match pss with
+let do_check_partial ?pred exhaust loc casel pss =
+(* MODIF *)
+my_print "do_check_partial\n";
+
+match pss with
 | [] ->
         (*
           This can occur
@@ -1933,6 +1996,7 @@ let do_check_partial ?pred exhaust loc casel pss = match pss with
     end
 
 let do_check_partial_normal loc casel pss =
+  my_print "do_check_partial_normal\n";
   do_check_partial exhaust loc casel pss
 
 let do_check_partial_gadt pred loc casel pss =
@@ -1994,6 +2058,9 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
 *)
 
 let do_check_fragile_param exhaust loc casel pss =
+  (* MODIF *)
+  my_print "do_check_fragile_param\n";
+
   let exts =
     List.fold_left
       (fun r c -> collect_paths_from_pat r c.c_lhs)
@@ -2005,6 +2072,9 @@ let do_check_fragile_param exhaust loc casel pss =
     | ps::_ ->
         List.iter
           (fun ext ->
+	    (* MODIF *)
+	    my_print "[iter] do_check_fragile_param\n";
+	    
             match exhaust (Some ext) pss (List.length ps) with
             | Rnone ->
                 Location.prerr_warning

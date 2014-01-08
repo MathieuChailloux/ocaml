@@ -25,8 +25,6 @@ let type_binding_callback =
   ref (fun _ _ _ _ -> [], Env.empty)
 let add_pattern_variables_callback =
   ref (fun ?check ?check_as _ -> (Env.empty, []))
-(*let type_pattern_callback =
-  ref (fun _ _ _ _ _ -> (Tpat_any, Env.empty, [], []))*)
 
 let under_with_scope = ref false
 let my_dbg = false
@@ -1019,7 +1017,10 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
         pat_attributes = sp.ppat_attributes;
         pat_env = !env }
   | Ppat_construct(lid, sarg) ->
-    if my_dbg then my_print "type_pat constr\n";
+    (* MODIF *)
+    my_print "type_pat constr\n";
+    Printast.pattern 0 Format.std_formatter sp;
+
     let opath =
         try
           let (p0, p, _) = extract_concrete_variant !env expected_ty in
@@ -3345,6 +3346,10 @@ and type_application env funct sargs =
         type_args [] [] ty (instance env ty) ty sargs []
 
 and type_construct env loc lid sarg ty_expected attrs =
+  (* MODIF *)
+	my_print "type_construct\n";
+  
+
   let opath =
     try
       let (p0, p,_) = extract_concrete_variant env ty_expected in
