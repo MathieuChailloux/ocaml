@@ -1374,10 +1374,10 @@ pattern:
       { Pat.attr $1 $2 }
 
   /**** MODIF ****/
-  | pattern with_patt_clause
+  | simple_pattern with_patt_clause
       { print_endline "[debug] pattern_with_matched"; mkpat(Ppat_with ($1, $2)) }
-
 ;
+
 simple_pattern:
     val_ident %prec below_EQUAL
       { mkpat(Ppat_var (mkrhs $1 1)) }
@@ -1426,6 +1426,7 @@ simple_pattern:
       { unclosed "(" 1 ")" 6 }
   | extension
       { mkpat(Ppat_extension $1) }
+
 ;
 
 pattern_comma_list:
