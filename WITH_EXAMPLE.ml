@@ -1,45 +1,52 @@
-(*
-  Erreurs :
+let (>>) h f = f h
+let print_sep () = print_endline "---------------------------------"
 
-let f = function 
-  | `A a with b = 0 and c = 0
-  | `B (a, b) with c = 0 
-  | `C (a, b, c) -> a + b + c
-
-  => >2 or-patt avec deux with
-
-let f = function x with b = 0 -> b  => Crash "full-match"
-
-*)
-
-let f = function `A with a = 0 -> a
+let test1 = function _ with y = 0 -> y
 
 let () = 
-  assert (f `A = 0)
+  test1 () >> Printf.printf "Test1 %d\n" 
 
-let f = function 
-  | `A a with b = 0
-  | `B (a, b) -> a + b
+let () = print_sep ()
 
-let () = begin
-  assert (f (`A 1) = 1);
-  assert (f (`B (1, 2)) = 3);
-end
+let f x =
+  match x with
+  | `Un a with b = 1 -> a + b
+  | `Deux (a, b) -> a + b
+  | `Trois _ -> 3
+      
+let f' x =
+  match x with
+  | `Deux (a, b) -> b
+  | `Un a with b = 1
+  | `Trois (a,b,_) -> 3 + b
 
-let f = function 
-  | `A a with b = 0 and c = 0
-  | `B (a, b) with c = 0 
-  | `C (a, b, c) -> a + b + c
-
-let () =
-  begin
-    assert (f (`A 1) = 1);
-    assert (f (`B (1, 2)) = 3);
-    assert (f (`C (1, 2, 3)) = 6);
-  end
-
-let f = function
-  | `A (`Aa with n = 2 | `Ab n) -> n
+let f'' x =
+  match x with
+  | `Un a with b = 1 and c = 0
+  | `Deux (a, c) with b = 0
+  | `Trois (a, b, c) -> a + b + c
 
 let () =
-  assert (f `A (`Aa ) = 3)
+  let cpt = ref 0 in
+  [`Un 1; `Deux (2, 1); `Trois (1,2,3)]
+  >> List.iter 
+    (fun e -> incr cpt;
+      Printf.printf "Test2(%d) %d\n" !cpt (f e))
+
+let () = print_sep ()
+
+let () =
+  let cpt = ref 0 in
+  [`Un 1; `Deux (2, 1); `Trois (1,2,3)]
+  >> List.iter 
+    (fun e -> incr cpt;
+      Printf.printf "Test3(%d) %d\n" !cpt (f' e))
+
+let () = print_sep ()
+
+let () =
+  let cpt = ref 0 in
+  [`Un 1; `Deux (2, 1); `Trois (1,2,3)]
+  >> List.iter 
+    (fun e -> incr cpt;
+      Printf.printf "Test4(%d) %d\n" !cpt (f'' e))
