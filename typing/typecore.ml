@@ -29,7 +29,7 @@ let add_pattern_variables_callback =
 let under_with_scope = ref false
 let my_dbg = false
 let my_print =
-    Format.fprintf Format.std_formatter
+    if my_dbg then Format.fprintf Format.std_formatter else (fun _ -> ())
     
 
 
@@ -1019,7 +1019,7 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
   | Ppat_construct(lid, sarg) ->
     (* MODIF *)
     my_print "type_pat constr\n";
-    Printast.pattern 0 Format.std_formatter sp;
+    (* if my_dbg then Printast.pattern 0 Format.std_formatter sp; *)
 
     let opath =
         try
@@ -1164,77 +1164,79 @@ let rec type_pat ~constrs ~labels ~no_existentials ~mode ~env sp expected_ty =
     if my_dbg then Format.fprintf Format.std_formatter "type_pat or\n";
 
 
-      let initial_pattern_variables = !pattern_variables in
-      let p1 = type_pat ~mode:Inside_or sp1 expected_ty in
-      let p1_variables = !pattern_variables in
-      pattern_variables := initial_pattern_variables;
-      let p2 = type_pat ~mode:Inside_or sp2 expected_ty in
-      let p2_variables = !pattern_variables in
-      let alpha_env =
-        enter_orpat_variables loc !env p1_variables p2_variables in
-      pattern_variables := p1_variables;
-      rp {
-        pat_desc = Tpat_or(p1, alpha_pat alpha_env p2, None);
-        pat_loc = loc; pat_extra=[];
-        pat_type = expected_ty;
-        pat_attributes = sp.ppat_attributes;
-        pat_env = !env }
+    let initial_pattern_variables = !pattern_variables in
+    let p1 = type_pat ~mode:Inside_or sp1 expected_ty in
+    let p1_variables = !pattern_variables in
+    pattern_variables := initial_pattern_variables;
+    let p2 = type_pat ~mode:Inside_or sp2 expected_ty in
+    let p2_variables = !pattern_variables in
+    let alpha_env =
+      enter_orpat_variables loc !env p1_variables p2_variables in
+    pattern_variables := p1_variables;
+    rp {
+      pat_desc = Tpat_or(p1, alpha_pat alpha_env p2, None);
+      pat_loc = loc; pat_extra=[];
+      pat_type = expected_ty;
+      pat_attributes = sp.ppat_attributes;
+      pat_env = !env }
   | Ppat_lazy sp1 ->
-      let nv = newvar () in
-      unify_pat_types loc !env (instance_def (Predef.type_lazy_t nv))
-        expected_ty;
-      let p1 = type_pat sp1 nv in
-      rp {
-        pat_desc = Tpat_lazy p1;
-        pat_loc = loc; pat_extra=[];
-        pat_type = expected_ty;
-        pat_attributes = sp.ppat_attributes;
-        pat_env = !env }
+    let nv = newvar () in
+    unify_pat_types loc !env (instance_def (Predef.type_lazy_t nv))
+      expected_ty;
+    let p1 = type_pat sp1 nv in
+    rp {
+      pat_desc = Tpat_lazy p1;
+      pat_loc = loc; pat_extra=[];
+      pat_type = expected_ty;
+      pat_attributes = sp.ppat_attributes;
+      pat_env = !env }
   | Ppat_constraint(sp, sty) ->
       (* Separate when not already separated by !principal *)
-      let separate = true in
-      if separate then begin_def();
-      let cty, force = Typetexp.transl_simple_type_delayed !env sty in
-      let ty = cty.ctyp_type in
-      let ty, expected_ty' =
-        if separate then begin
-          end_def();
-          generalize_structure ty;
-          instance !env ty, instance !env ty
-        end else ty, ty
-      in
-      unify_pat_types loc !env ty expected_ty;
-      let p = type_pat sp expected_ty' in
+    let separate = true in
+    if separate then begin_def();
+    let cty, force = Typetexp.transl_simple_type_delayed !env sty in
+    let ty = cty.ctyp_type in
+    let ty, expected_ty' =
+      if separate then begin
+        end_def();
+        generalize_structure ty;
+        instance !env ty, instance !env ty
+      end else ty, ty
+    in
+    unify_pat_types loc !env ty expected_ty;
+    let p = type_pat sp expected_ty' in
       (*Format.printf "%a@.%a@."
         Printtyp.raw_type_expr ty
         Printtyp.raw_type_expr p.pat_type;*)
-      pattern_force := force :: !pattern_force;
-      let extra = (Tpat_constraint cty, loc, sp.ppat_attributes) in
-      if separate then
-        match p.pat_desc with
-          Tpat_var (id,s) ->
-            {p with pat_type = ty;
-             pat_desc = Tpat_alias ({p with pat_desc = Tpat_any; pat_attributes = []}, id,s);
-             pat_extra = [extra];
-            }
-        | _ -> {p with pat_type = ty;
-                pat_extra = extra :: p.pat_extra}
-      else p
+    pattern_force := force :: !pattern_force;
+    let extra = (Tpat_constraint cty, loc, sp.ppat_attributes) in
+    if separate then
+      match p.pat_desc with
+        Tpat_var (id,s) ->
+          {p with pat_type = ty;
+            pat_desc = Tpat_alias ({p with pat_desc = Tpat_any; pat_attributes = []}, id,s);
+            pat_extra = [extra];
+          }
+      | _ -> {p with pat_type = ty;
+        pat_extra = extra :: p.pat_extra}
+    else p
   | Ppat_type lid ->
-      let (path, p,ty) = build_or_pat !env loc lid.txt in
-      unify_pat_types loc !env ty expected_ty;
-      { p with pat_extra = (Tpat_type (path, lid), loc, sp.ppat_attributes) :: p.pat_extra }
+    let (path, p,ty) = build_or_pat !env loc lid.txt in
+    unify_pat_types loc !env ty expected_ty;
+    { p with pat_extra = (Tpat_type (path, lid), loc, sp.ppat_attributes) :: p.pat_extra }
   | Ppat_extension (s, _arg) ->
-      raise (Error (s.loc, !env, Extension s.txt))
+    raise (Error (s.loc, !env, Extension s.txt))
   
   (**** MODIF ****)
   | Ppat_with (p, bindings) ->
-
-    print_string "Ppat : ";
-    List.iter (fun {pvb_pat} ->
-      match pvb_pat.ppat_desc with
-      | Ppat_var _ -> print_string "var, "
-      | _ -> print_string "other") bindings;
+    if my_dbg then
+      begin
+	print_string "Ppat : ";
+	List.iter (fun {pvb_pat} ->
+	  match pvb_pat.ppat_desc with
+	  | Ppat_var _ -> print_string "var, "
+	  | _ -> print_string "other") bindings;
+      end;
 
     under_with_scope := true;
 

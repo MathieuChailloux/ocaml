@@ -620,7 +620,6 @@ let simplify_cases args cls = match args with
 	  (* MODIF *)
 	  | Tpat_with (p, bindings) ->
 	    (*fatal_error "Matching.simplify_cases"*)
-	    Format.fprintf Format.std_formatter "Simplifying\n";
 	    let new_action =
 	      List.fold_left (fun acc {vb_pat; vb_expr} ->
 		match vb_pat.pat_desc with

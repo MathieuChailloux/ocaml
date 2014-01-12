@@ -184,6 +184,7 @@ and package_with i ppf (s, t) =
   core_type i ppf t
 
 and pattern i ppf x =
+  line i ppf "bli";
   line i ppf "pattern %a\n" fmt_location x.ppat_loc;
   attributes i ppf x.ppat_attributes;
   let i = i+1 in

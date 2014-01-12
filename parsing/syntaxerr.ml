@@ -50,7 +50,6 @@ let prepare_error = function
          is reserved for the local type %s."
         var var
   | Other loc ->
-    print_endline "putain d'erreur";
     Location.error ~loc "Error: Syntax error"
 
 let () =

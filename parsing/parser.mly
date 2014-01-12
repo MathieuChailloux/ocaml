@@ -24,7 +24,7 @@ let mkpat d = Pat.mk ~loc:(symbol_rloc()) d
 let mkexp d = Exp.mk ~loc:(symbol_rloc()) d
 let mkmty d = Mty.mk ~loc:(symbol_rloc()) d
 let mksig d = Sig.mk ~loc:(symbol_rloc()) d
-let mkmod d = Mod.mk ~loc:(symbol_rloc()) d
+let mkmod d = Mod.mk ~loc:(symbol_rloc()) d 
 let mkstr d = Str.mk ~loc:(symbol_rloc()) d
 let mkclass d = Cl.mk ~loc:(symbol_rloc()) d
 let mkcty d = Cty.mk ~loc:(symbol_rloc()) d
@@ -152,7 +152,6 @@ let array_function str name =
   ghloc (Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name)))
 
 let syntax_error () =
-  print_endline "putain de syntax error";
   raise Syntaxerr.Escape_error
 
 let unclosed opening_name opening_num closing_name closing_num =
@@ -1375,7 +1374,7 @@ pattern:
 
   /**** MODIF ****/
   | simple_pattern with_patt_clause
-      { print_endline "[debug] pattern_with_matched"; mkpat(Ppat_with ($1, $2)) }
+      { (* print_endline "[debug] pattern_with_matched"; *) mkpat(Ppat_with ($1, $2)) }
 ;
 
 simple_pattern:
