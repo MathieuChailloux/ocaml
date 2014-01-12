@@ -290,6 +290,8 @@ let mkexp_attrs d attrs =
 %token AND
 %token AS
 %token ASSERT
+/* MODIF */
+%token AVEC
 %token BACKQUOTE
 %token BANG
 %token BAR
@@ -437,6 +439,7 @@ The precedences must be listed from low to high.
 %nonassoc LESSMINUS                     /* below COLONEQUAL (lbl <- x := e) */
 %right    COLONEQUAL                    /* expr (e := e := e) */
 %nonassoc AS
+%nonassoc below_BAR
 %left     BAR                           /* pattern (p|p|p) */
 %nonassoc below_COMMA
 %left     COMMA                         /* expr/expr_comma_list (e,e,e) */
@@ -1276,7 +1279,7 @@ match_case:
 
 /**** MODIF ****/
 with_patt_clause:
-  | WITH with_patt_bindings
+  | AVEC with_patt_bindings
       { List.rev $2 }
 ;
 
@@ -1373,7 +1376,7 @@ pattern:
       { Pat.attr $1 $2 }
 
   /**** MODIF ****/
-  | simple_pattern with_patt_clause
+  | pattern with_patt_clause %prec below_BAR
       { (* print_endline "[debug] pattern_with_matched"; *) mkpat(Ppat_with ($1, $2)) }
 ;
 

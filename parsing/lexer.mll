@@ -36,6 +36,7 @@ let keyword_table =
     "and", AND;
     "as", AS;
     "assert", ASSERT;
+    "avec", AVEC;
     "begin", BEGIN;
     "class", CLASS;
     "constraint", CONSTRAINT;
