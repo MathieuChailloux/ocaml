@@ -1373,7 +1373,7 @@ pattern:
       { Pat.attr $1 $2 }
 
   /**** MODIF ****/
-  | simple_pattern with_patt_clause
+  | pattern with_patt_clause
       { (* print_endline "[debug] pattern_with_matched"; *) mkpat(Ppat_with ($1, $2)) }
 ;
 
