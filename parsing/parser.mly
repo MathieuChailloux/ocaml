@@ -438,6 +438,7 @@ The precedences must be listed from low to high.
 %nonassoc ELSE                          /* (if ... then ... else ...) */
 %nonassoc LESSMINUS                     /* below COLONEQUAL (lbl <- x := e) */
 %right    COLONEQUAL                    /* expr (e := e := e) */
+%nonassoc AVEC
 %nonassoc AS
 %nonassoc below_BAR
 %left     BAR                           /* pattern (p|p|p) */
@@ -1376,7 +1377,7 @@ pattern:
       { Pat.attr $1 $2 }
 
   /**** MODIF ****/
-  | pattern with_patt_clause %prec below_BAR
+  | pattern with_patt_clause %prec AVEC
       { (* print_endline "[debug] pattern_with_matched"; *) mkpat(Ppat_with ($1, $2)) }
 ;
 
