@@ -17,10 +17,6 @@ open Asttypes
 open Types
 open Typedtree
 
-(* MODIF *)
-let my_dbg = false
-let my_print = if my_dbg then Format.fprintf Format.std_formatter else (fun _ -> ())
-
 (*************************************)
 (* Utilities for building patterns   *)
 (*************************************)
@@ -711,8 +707,6 @@ let clean_env env =
   loop env
 
 let full_match ignore_generalized closing env = 
-  my_print "full_match\n";
-  if my_dbg then Printtyped.pattern 0 Format.std_formatter (fst (List.hd env));
   match env with
   | ({pat_desc = Tpat_construct (_,{cstr_tag=Cstr_exception _},_)},_)::_ ->
     false
@@ -1050,7 +1044,6 @@ and has_instances = function
   | q::rem -> has_instance q && has_instances rem
 
 let rec satisfiable pss qs =
-  my_print "satisfiable\n";
   match pss with
   | [] -> has_instances qs
   | _  ->
@@ -1124,31 +1117,20 @@ let rec try_many_gadt  f = function
     rappend (f (p, pss)) (try_many_gadt f rest)
 
 let rec exhaust ext pss n =
-(* MODIF *)
-  my_print "exhaust\n";
-
   match pss with
   | []    ->  Rsome (omegas n)
   | []::_ ->  Rnone
   | pss   ->
-    my_print "exhaust pss\n";
     let q0 = discr_pat omega pss in
     begin match filter_all q0 pss with
     (* first column of pss is made of variables only *)
     | [] ->
-      my_print "exhaust empty\n";
       begin match exhaust ext (filter_extra pss) (n-1) with
       | Rsome r -> Rsome (q0::r)
       | r -> r
       end
     | constrs ->
-      (* MODIF *)
-      my_print "exhaust constrs\n";
-
       let try_non_omega (p,pss) =
-	(* MODIF *)
-	my_print "non omega\n";
-
         if is_absent_pat p then
           Rnone
         else
@@ -1172,9 +1154,6 @@ let rec exhaust ext pss n =
             * D non-exhaustive => we have a non-filtered value
           *)
         let r =  exhaust ext (filter_extra pss) (n-1) in
-	  (* MODIF *)
-	my_print "non full_match\n";
-
         match r with
         | Rnone -> Rnone
         | Rsome r ->
@@ -1311,8 +1290,6 @@ let exhaust_gadt ext pss n =
 *)
 
 let rec pressure_variants tdefs =
-(* MODIF *)
-  my_print "pressure_variants\n";
   function
   | []    -> false
   | []::_ -> true
@@ -1774,7 +1751,7 @@ let do_filter_one q pss =
     | ({pat_desc = Tpat_or(p1,p2,_)}::ps,loc)::pss ->
       filter_rec ((p1::ps,loc)::(p2::ps,loc)::pss)
     (* MODIF *)
-    | ({pat_desc = Tpat_with(p,_)}::ps,loc)::pss -> failwith "do_filter_one"	  
+    | ({pat_desc = Tpat_with(p,_)}::ps,loc)::pss -> failwith "TODO : do_filter_one"	  
 
     | (p::ps,loc)::pss ->
       if simple_match q p
@@ -1935,9 +1912,6 @@ end
 
 
 let do_check_partial ?pred exhaust loc casel pss =
-(* MODIF *)
-  my_print "do_check_partial\n";
-
   match pss with
   | [] ->
     (*
@@ -1996,7 +1970,6 @@ let do_check_partial ?pred exhaust loc casel pss =
     end
 
 let do_check_partial_normal loc casel pss =
-  my_print "do_check_partial_normal\n";
   do_check_partial exhaust loc casel pss
 
 let do_check_partial_gadt pred loc casel pss =
@@ -2058,9 +2031,6 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
 *)
 
 let do_check_fragile_param exhaust loc casel pss =
-  (* MODIF *)
-  my_print "do_check_fragile_param\n";
-
   let exts =
     List.fold_left
       (fun r c -> collect_paths_from_pat r c.c_lhs)
@@ -2072,9 +2042,6 @@ let do_check_fragile_param exhaust loc casel pss =
     | ps::_ ->
       List.iter
         (fun ext ->
-	    (* MODIF *)
-	  my_print "[iter] do_check_fragile_param\n";
-	  
           match exhaust (Some ext) pss (List.length ps) with
           | Rnone ->
             Location.prerr_warning

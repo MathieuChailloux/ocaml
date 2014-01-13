@@ -525,7 +525,6 @@ let rec exc_inside p = match p.pat_desc with
   | Tpat_or (p1,p2,_) -> exc_inside p1 || exc_inside p2
     (* MODIF *)
   | Tpat_with (p, _) ->
-    (*fatal_error "Matching.exc_inside"*)
     exc_inside p
 
 and exc_insides ps = List.exists exc_inside ps
@@ -619,7 +618,6 @@ let simplify_cases args cls = match args with
               end
 	  (* MODIF *)
 	  | Tpat_with (p, bindings) ->
-	    (*fatal_error "Matching.simplify_cases"*)
 	    let new_action =
 	      List.fold_left (fun acc {vb_pat; vb_expr} ->
 		match vb_pat.pat_desc with
@@ -706,7 +704,6 @@ let rec extract_vars r p = match p.pat_desc with
 | Tpat_constant _|Tpat_any|Tpat_variant (_,None,_) -> r
   (* MODIF *)
 | Tpat_with (p, pel) ->
-  (*fatal_error "Matching.extract_vars"*)
   List.fold_left
     (fun acc {vb_pat} ->
       extract_vars acc vb_pat)
@@ -737,9 +734,6 @@ let rec explode_or_pat arg patl mk_action rem vars aliases = function
   | {pat_desc = Tpat_var (x, _)} ->
       let env = mk_alpha_env arg (x::aliases) vars in
       (omega::patl,mk_action (List.map snd env))::rem
-	(* MODIF *)
-  (*| {pat_desc = Tpat_with _} ->
-    fatal_error "Matching.explode_or_pat"*)
 
   | p ->
       let env = mk_alpha_env arg aliases vars in
@@ -2545,8 +2539,6 @@ let rec name_pattern default = function
       begin match pat.pat_desc with
         Tpat_var (id, _) -> id
       | Tpat_alias(p, id, _) -> id
-      (* MODIF *)
-      (*| Tpat_with _ -> fatal_error "Matching.name_pattern"*)
 	
       | _ -> name_pattern default rem
       end
@@ -2571,8 +2563,6 @@ let arg_to_var arg cls = match arg with
 *)
 
 let rec compile_match repr partial ctx m = match m with
-(* MODIF *)
-(*| { cases = ([{pat_desc = Tpat_with _}], _) :: _} -> failwith "Matching.compile_match"*)
 | { cases = [] } -> comp_exit ctx m
 | { cases = ([], action) :: rem } ->
     if is_guarded action then begin
@@ -2703,7 +2693,7 @@ let find_in_pat pred =
     | Tpat_constant _ | Tpat_var _
     | Tpat_any | Tpat_variant (_,None,_) -> false
       (* MODIF *)
-    | Tpat_with (p, _) -> (*fatal_error "Matching.find_in_pat"*)
+    | Tpat_with (p, _) ->
       find_rec p
   end in
   find_rec
