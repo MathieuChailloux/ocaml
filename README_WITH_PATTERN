@@ -1,0 +1,49 @@
+Extension du compilateur OCaml par des pattern "with".
+
+EXEMPLE : cf WITH_EXAMPLE.ml + lire section TODO pour les cas posant problème.
+
+MODIFICATIONS :
+
+Les modifications effectuées dans le code source sont toujours précédées d'un commentaire (* MODIF *).
+
+AST :
+
+Nouveau cas Ppat_with (pattern, value_binding list) dans parsing/parsetree.mli
+
+Nouveau cas Tpat_with (pattern, value_binding list) dans typing/typedtree.mli
+
+TYPING :
+
+Cela se passe dans le typing/typecore.ml, à l'intérieur de type_pat (~ l.1210), nous avons ajouté un nouveau traitement pour traduire un Ppat_with vers un Tpat_wiht. Pour traduire le sous-pattern, il n'y a pas de grande difficulté mais pour les bindings cela est plus compliqué car il faut typer des expressions. Or, le typage des expressions nécessite le typage des patterns. Pour cela, nous avons utilisé des callbacks (cf début de typecore.ml). Mais l'utilisation de ces fonctions a posé des incohérences car elles sont appelées sous des conditions différentes dans l'architecture initiale.
+Par exemple, nous nous somme heurtés à un problème avec les variables de patterns qui sont stockées globalement (pattern_variables, ~ l.396) et qui sont remises à zéro (reset_pattern) après chaque appel à type_pattern (qui enveloppe la fonction type_pat). Or, cette fonction type_pattern est appelée pour le typage d'un binding. Ainsi, le typage des bindings d'un pattern with réinitialise les variables de patterns, et on perd alors les variables déjà typées. Pour éviter ce problème, nous avons utilisé une garde globale, under_with_scope, pour empêcher la manipulation des variables de patterns lors du typage d'un pattern with.
+Nous avons aussi eu un autre problème avec un autre variable globale, newtype_level, qui était réinitialisée à None lors du typage des bindings et provoquait alors une exception. Nous avons alors juste réinjecté sa valeur initiale à cette variable après le typage des bindings.
+
+
+
+PATTERN-MATCHING :
+
+Pour adapter le mécanisme de pattern-matching à notre nouvelle construction, nous avons dû intervenir au niveau de la traduction de l'AST typé (typedtree) vers le langage intermédiaire lambda (cf lambda.ml, ce langage est ensuite traduit en bytecode). Nous nous sommes notamment inspirés du pattern d'alias ([pattern] as [name]).
+Pour effectuer le pattern-matching, le compilateur s'appuie sur un certain nombre de fonctions utilitaires (cf typing/parmatch.ml) qu'il a fallu mettre à jour. On peut citer par exemple la comparaison de 2 patterns pour savoir s'il sont compatibles, ou encore la collecte des variables de patterns.
+Surtout, il nous a fallu parvenir à ajouter les bindings dans l'action associée à un pattern with. C'est au moment de la traduction que cela intervient, dans le fichier bytecomp/matching.ml (qui est utilisé dans bytecomp/translcore.ml pour gérer le cas des pattern-matchings). Plus précisément, c'est lors de la simplification des cas d'un pattern-matching (~ l.619) que ces bindings sont ajoutés, mais ils doivent alors être déjà traduits. Comme précédemment, il nous a fallu utiliser un système de callback pour traduire les expressions présentes dans les bindings d'un pattern with.
+
+
+
+TODO :
+
+Il reste un bug dans le parsing : dans certains cas (notamment les constructeurs), lors d'un pattern Or (p1 | p2), si p2 est un pattern with, il se place alors au dessus du pattern Or.
+
+Un exemple (en supposant que les constructeurs existent) :
+match x with
+| A with a = 0
+| B with a = 1
+
+ne marchera pas car le parser construit un pattern de la forme (où a est donc utilisé plusieurs fois dans un pattern autre qu'un pattern Or) :
+With (
+  Or (
+    (With (
+      A,
+      a = 0)),
+    B),
+  a = 1) 
+
+Un moyen temporaire d'éviter cela est de parenthéser les patterns with concernés.

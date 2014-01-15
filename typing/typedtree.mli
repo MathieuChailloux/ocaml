@@ -52,6 +52,7 @@ and pattern_desc =
   | Tpat_array of pattern list
   | Tpat_or of pattern * pattern * row_desc option
   | Tpat_lazy of pattern
+      (* MODIF *)
   | Tpat_with of pattern * value_binding list
 
 and expression =

@@ -23,8 +23,6 @@ open Ctype
 (* MODIF *)
 let type_binding_callback =
   ref (fun _ _ _ _ -> [], Env.empty)
-let add_pattern_variables_callback =
-  ref (fun ?check ?check_as _ -> (Env.empty, []))
 let under_with_scope = ref false
     
 
@@ -1287,8 +1285,6 @@ let add_pattern_variables ?check ?check_as env =
      get_ref module_variables)
   else
     (env, [])
-
-let _ = add_pattern_variables_callback := add_pattern_variables
 
 let type_pattern ~lev env spat scope expected_ty =
   reset_pattern scope true;
